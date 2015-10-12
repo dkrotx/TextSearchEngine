@@ -1,0 +1,35 @@
+build_dict:
+- OK, we got index-blocks, now we have to build whole index
+-- build dictionary
+--- serialized multyhash file
+---- with tests
+-- optionally, collect all blocks in one area (optimizer)
+
+search:
+- parse user query in form "!Putin && (Lukashenko || Merkel) && Minsk"
+- build query tree with link to rindex' nodes
+- print URLs instead of docids
+
+index:
+- make Fibonnaci / Simple9 / Golomb encoding
+
+test:
+- index really huge dump
+- build index with Apache Spark
+-- launch on standalone version
+-- launch apache spark distributed (lxc)
+--- admin apache spark
+--- try tiny examples on Apache Spark
+- integrate logging on indexing process
+
+Bonus:
+- use jumptables to skip docposes
+- use lemmatizer
+-- integrate lemmatizer via JNI
+- add synonyms
+- save entries, not only posting lists
+-- make extraction
+-- make text ranking
+
+Build system:
+-- build all things with gradle
