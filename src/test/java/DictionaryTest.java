@@ -71,10 +71,11 @@ public class DictionaryTest {
 
             assertTrue(srch.Exists(1));
 
-            DictRecord[] expected = new DictRecord[3];
-            expected[0] = new DictRecord(100, 10);
-            expected[1] = new DictRecord(400, 40);
-            expected[2] = new DictRecord(900, 90);
+            DictRecord[] expected = {
+                    new DictRecord(100, 10),
+                    new DictRecord(400, 40),
+                    new DictRecord(900, 90)
+            };
 
             assertArrayEquals("there should be 3 entries of '1'", expected, srch.GetAll(1));
         }
