@@ -15,12 +15,12 @@ import java.nio.file.Paths;
 public class HtmlIndexerDemo {
 
     private HtmlDocIndexer idx;
-    private BufferedOutputStream idxfile;
+    private DataOutputStream idxfile;
 
     public HtmlIndexerDemo(String out_path) throws FileNotFoundException {
         IndexingConfig cfg = new IndexingConfig();
         idx = new HtmlDocIndexer(cfg);
-        idxfile = new BufferedOutputStream(new FileOutputStream(out_path));
+        idxfile = new DataOutputStream(new FileOutputStream(out_path));
     }
 
     public void ParseOneMoreFile(String path) throws IOException, HtmlDocIndexer.HTMLParsingError {

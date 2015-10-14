@@ -1,8 +1,9 @@
 #!/bin/bash -e
 
-cd $HOME/IdeaProjects/TextSearchEngine/build/classes/main
+cd "$( dirname $0 )/build/classes/main"
 
 MAIN_CLASS=org.bytesoft.tsengine.demo.HtmlIndexerDemo
 CLSPATH=/usr/share/java/gnu-getopt.jar:/home/dkrot/javalibs/boilerpipe-1.2.0/boilerpipe-1.2.0.jar:/home/dkrot/javalibs/boilerpipe-1.2.0/lib/*:.
 
-java -cp "$CLSPATH" "$MAIN_CLASS" "$@"
+JAVA_HOME=/opt/java/jdk-last
+/opt/java/jdk-last/bin/java -cp "$CLSPATH" "$MAIN_CLASS" "$@"

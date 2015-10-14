@@ -3,8 +3,8 @@ package org.bytesoft.tsengine;
 import de.l3s.boilerpipe.extractors.*;
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashSet;
 
 /**
@@ -40,7 +40,7 @@ public class HtmlDocIndexer {
         return widx.GetApproximateSize();
     }
 
-    public void Flush(OutputStream out) throws IOException {
+    public void Flush(DataOutputStream out) throws IOException {
         widx.WriteAndFlush(out);
     }
 

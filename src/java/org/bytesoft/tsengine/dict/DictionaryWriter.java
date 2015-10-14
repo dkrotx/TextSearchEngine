@@ -34,7 +34,7 @@ final public class DictionaryWriter {
     }
 
     public void Add(long key, DictRecord entry) {
-        int bucket = (int)(key % buckets.length);
+        int bucket = (int)(Math.abs(key) % buckets.length);
         buckets[bucket].add( new KVPair(key, entry) );
     }
 

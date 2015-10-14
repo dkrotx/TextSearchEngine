@@ -2,13 +2,12 @@ package org.bytesoft.tsengine;
 
 import org.bytesoft.tsengine.encoders.*;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import static util.hash.MurmurHash3.murmurhash3_x64;
-import static util.bytes.Bytes.*;
 
 /**
  * WordIndexer class
@@ -32,6 +31,7 @@ public class WordIndexer {
 
     public void AddWord(String word, int docid) {
         long hash = murmurhash3_x64(word);
+
         DeltaIntEncoder comp = words_buf.get(hash);
 
         if (comp == null) {
@@ -51,11 +51,12 @@ public class WordIndexer {
      * Flush encoded content in given stream
      * @param out output stream to write binary data
      */
-    public void WriteAndFlush(OutputStream out) throws IOException {
+    public void WriteAndFlush(DataOutputStream out) throws IOException {
         for(Map.Entry<Long, DeltaIntEncoder> entry: words_buf.entrySet()) {
             DeltaIntEncoder enc = entry.getValue();
-            out.write(toBytes(entry.getKey()));
-            out.write(toBytes(enc.GetStoreSize()));
+
+            out.writeLong(entry.getKey());
+            out.writeInt(enc.GetStoreSize());
             out.write(enc.GetBytes());
         }
         words_buf.clear();
