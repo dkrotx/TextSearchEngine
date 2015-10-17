@@ -7,35 +7,6 @@ import java.text.ParseException;
 
 public class QueryTreeTest {
 
-    private void dumpSubtree(QueryTreeNode node, StringBuilder buf, int level) {
-        boolean print_parenthesis = (level > 0 && (node.left != null && node.right != null));
-        ExprToken value = node.value;
-
-        if (print_parenthesis)
-            buf.append('(');
-
-        if (node.left != null)
-            dumpSubtree(node.left, buf, level+1);
-
-        if (value.IsOperator() && value.GetOperator() != '!')
-            buf.append(" " + node.value.toString() + " ");
-        else
-            buf.append(node.value.toString());
-
-        if (node.right != null)
-            dumpSubtree(node.right, buf, level+1);
-
-        if (print_parenthesis)
-            buf.append(')');
-    }
-
-    private String dumpQueryTree(QueryTreeNode root) {
-        StringBuilder buf = new StringBuilder();
-        dumpSubtree(root, buf, 0);
-
-        return buf.toString();
-    }
-
     private String parseQuery(String query) {
         QueryTreeNode tree;
 
@@ -47,7 +18,7 @@ public class QueryTreeTest {
             return "Exception:" + e.getMessage();
         }
 
-        return dumpQueryTree(tree);
+        return tree.toString();
     }
 
     @Test
