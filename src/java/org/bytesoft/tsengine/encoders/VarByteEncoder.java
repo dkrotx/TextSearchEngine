@@ -26,4 +26,14 @@ public class VarByteEncoder implements IntCompressor {
 
     public int GetStoreSize() { return storage.GetSize();  }
     public byte[]  GetBytes() { return storage.GetBytes(); }
+
+    /**
+     * Get maximum integer value to encode.
+     * You can't encode {@code GetMaxEncodingInt()+1} without getting {@code TooLargeToCompressException}
+     *
+     * @return this limit value
+     */
+    public static int GetMaxEncodingInt() {
+        return 1 << 28;
+    }
 }
