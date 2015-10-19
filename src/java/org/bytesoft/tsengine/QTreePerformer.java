@@ -55,6 +55,9 @@ public class QTreePerformer {
         }
     }
 
+    /**
+     * Terminal node - deals with index block iterator
+     */
     static private class TerminalNode implements NodeExecutor {
         IdxBlocksIterator it;
 
@@ -73,6 +76,10 @@ public class QTreePerformer {
         }
     }
 
+    /**
+     * Conjunction node: left & right
+     * Extract numbers which are in left and in right nodes simultaneously
+     */
     static private class AndNode implements NodeExecutor {
         private NodeExecutor left;
         private NodeExecutor right;
@@ -114,6 +121,10 @@ public class QTreePerformer {
         }
     }
 
+    /**
+     * Disjunction node: left | right
+     * Join numbers from left and right node
+     */
     static private class OrNode implements NodeExecutor {
         private NodeExecutor left;
         private NodeExecutor right;
@@ -142,11 +153,18 @@ public class QTreePerformer {
         }
     }
 
-    static private class NotNode implements NodeExecutor {
+    /**
+     * Negation node - provide numbers which are absent in `operand` node
+     * For example:
+     *   - [0, 1, 3] => [2, 4, ...]
+     *   - [3] => [0, 1, 2, 4, ...]
+     *   - []  => [0, 1, ...]
+     */
+    static private class NegationNode implements NodeExecutor {
         private NodeExecutor operand;
         private int virtual_doc_id = IdxBlocksIterator.ALPHA_ID;
 
-        public NotNode(NodeExecutor operand) {
+        public NegationNode(NodeExecutor operand) {
             this.operand = operand;
         }
 
@@ -167,7 +185,7 @@ public class QTreePerformer {
     }
 
     private NodeExecutor root;
-    private int last_docid = -1;
+    private int last_doc_id = -1;
 
     private NodeExecutor deepCopy(QueryTreeNode node) throws UnsupportedQTreeOperator {
         if (node.IsLeaf()) {
@@ -183,7 +201,7 @@ public class QTreePerformer {
             case '|':
                 return new OrNode(deepCopy(node.left), deepCopy(node.right));
             case '!':
-                return new NotNode(deepCopy(node.GetUnaryOperand()));
+                return new NegationNode(deepCopy(node.GetUnaryOperand()));
         }
 
         throw new UnsupportedQTreeOperator("Unsupported opeator: " + node.value);
@@ -195,16 +213,16 @@ public class QTreePerformer {
     }
 
     public boolean Finished() {
-        return last_docid == IdxBlocksIterator.OMEGA_ID;
+        return last_doc_id == IdxBlocksIterator.OMEGA_ID;
     }
 
     public int GetNextDocument() {
         if (Finished())
             return IdxBlocksIterator.OMEGA_ID;
 
-        root.GotoDocID(last_docid + 1);
-        last_docid = root.EvaluateNode();
-        return last_docid;
+        root.GotoDocID(last_doc_id + 1);
+        last_doc_id = root.EvaluateNode();
+        return last_doc_id;
     }
 
 }

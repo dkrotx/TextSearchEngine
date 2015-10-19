@@ -218,4 +218,44 @@ public class QTreePerformerTest {
         // test beyond posting list
         assertEquals(8, performer.GetNextDocument());
     }
+
+    @Test
+    // Negation of not-existing-node should give 0..+INF
+    public void TestNullNegation() throws Exception {
+        QTreePerformer performer = makeQTreePerformer("!fly", new IdxBlockStorage());
+
+        assertFalse(performer.Finished());
+
+        assertEquals(0, performer.GetNextDocument());
+        assertEquals(1, performer.GetNextDocument());
+
+        for(int i = 0; i < 100; i++) {
+            assertEquals(i + 2, performer.GetNextDocument());
+            assertFalse("Negation is always infinite", performer.Finished());
+        }
+    }
+
+    @Test
+    // Obviously, this expression should give empty set
+    public void TestNegationAndWord() throws Exception {
+        QTreePerformer performer = makeQTreePerformer("dog & !dog", new IdxBlockStorage()
+                        .AddWord("dog", 1, 3, 5, 6, 7, 8, 14)
+        );
+
+        assertFalse("QTreePerformer can't be finished before any extraction", performer.Finished());
+        checkPerformerFinished(performer);
+    }
+
+    @Test
+    public void TestRealExpression() throws Exception {
+        QTreePerformer performer = makeQTreePerformer("dog & (cat | fish) & !turtle", new IdxBlockStorage()
+                        .AddWord("dog", 1, 3, 5, 6, 7, 8, 14)
+                        .AddWord("cat", 1, 3, 8, 11, 12, 13)
+                        .AddWord("fish", 3, 5, 8)
+                        .AddWord("turtle", 3)
+        );
+
+        assertPerformerResultEqualsV(performer, 1, 5, 8);
+        checkPerformerFinished(performer);
+    }
 }
