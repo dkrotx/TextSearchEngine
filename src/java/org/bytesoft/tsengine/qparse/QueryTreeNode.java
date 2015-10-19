@@ -23,6 +23,10 @@ public class QueryTreeNode {
         return !IsBinary() && !IsLeaf();
     }
 
+    public QueryTreeNode GetUnaryOperand() {
+        return (left == null ? right : left);
+    }
+
     static private void dumpSubtree(QueryTreeNode node, StringBuilder buf, int level) {
         boolean print_parenthesis = node.IsBinary() && level > 0;
         ExprToken value = node.value;

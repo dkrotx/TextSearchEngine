@@ -21,7 +21,7 @@ public class IdxBlockDecoder {
         block_buf = mem;
         readHeader();
 
-        // TODO: select int-decoder from header
+        // TODO: select decoder from header
         docid_decoder = new DeltaIntDecoder(new VarByteDecoder(mem.slice()));
     }
 
@@ -45,10 +45,29 @@ public class IdxBlockDecoder {
 
     /**
      * Check there is more documents in posting list
-     * @return true if {@code ReadNext()} is available
      */
     public boolean HasNext() {
         return cur_docs_offset < ndocs;
+    }
+
+    /**
+     * Set position to documentID >= given id
+     * @warning GotoDocID can only move forward (growing doc IDs)
+     *
+     * @param id upper bound of document to seek
+     * @return current document id, which can be:
+     *      -1 if no documents >= id
+     *      == id if document {@code #id} is found
+     *      >  id if id itself not found, but there are documents with greater id
+     */
+    public int GotoDocID(int id) {
+        while (GetCurrentDocID() < id) {
+            if (!HasNext())
+                return -1;
+            ReadNext();
+        }
+
+        return GetCurrentDocID();
     }
 
     /**
