@@ -1,10 +1,12 @@
 package org.bytesoft.tsengine.encoders;
 
+import java.io.ByteArrayOutputStream;
+
 /**
  * VarByteEncoder - class for variable byte encoding
  */
 public class VarByteEncoder implements IntCompressor {
-    CompactByteBuffer storage = new CompactByteBuffer();
+    ByteArrayOutputStream storage = new ByteArrayOutputStream();
 
     /**
      * Add number to varbyte buffer
@@ -18,14 +20,14 @@ public class VarByteEncoder implements IntCompressor {
         // encode from highest bits, it will be faster to decode then
         for (int shift = 21; shift > 0; shift -= 7) {
             if (num >= (1 << shift))
-                storage.AddByte((num & (0x7f << shift)) >> shift | 0x80);
+                storage.write((num & (0x7f << shift)) >> shift | 0x80);
         }
 
-        storage.AddByte(num & 0x7f);
+        storage.write(num & 0x7f);
     }
 
-    public int GetStoreSize() { return storage.GetSize();  }
-    public byte[]  GetBytes() { return storage.GetBytes(); }
+    public int GetStoreSize() { return storage.size();  }
+    public byte[]  GetBytes() { return storage.toByteArray(); }
 
     /**
      * Get maximum integer value to encode.
