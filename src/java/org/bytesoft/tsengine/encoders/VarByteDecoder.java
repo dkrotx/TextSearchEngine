@@ -14,13 +14,16 @@ public class VarByteDecoder implements IntDecompressor {
 
     @Override
     public int ExtractNumber() {
+        return ExtractNumberFromBuf(buf);
+    }
+
+    public static int ExtractNumberFromBuf(ByteBuffer buf) {
         byte b   = buf.get();
         int  res = b & 0x7f;
 
         while (b < 0) {
             b = buf.get();
-            res <<= 7;
-            res |= b & 0x7f;
+            res = (res << 7) | (b & 0x7f);
         }
 
         return res;
