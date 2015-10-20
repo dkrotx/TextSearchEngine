@@ -1,15 +1,3 @@
-build_dict:
-- OK, we got index-blocks, now we have to build whole index
--- build dictionary
---- serialized multyhash file
----- with tests
--- optionally, collect all blocks in one area (optimizer)
-
-search:
-- parse user query in form "!Putin && (Lukashenko || Merkel) && Minsk"
-- build query tree with link to rindex' nodes
-- print URLs instead of docids
-
 index:
 - make Fibonnaci / Simple9 / Golomb encoding
 
