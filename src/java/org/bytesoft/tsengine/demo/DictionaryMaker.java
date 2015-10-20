@@ -3,9 +3,10 @@ package org.bytesoft.tsengine.demo;
 import org.bytesoft.tsengine.dict.DictRecord;
 import org.bytesoft.tsengine.dict.DictionaryWriter;
 
-import java.io.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

@@ -1,6 +1,7 @@
-import org.bytesoft.tsengine.encoders.*;
-
-import org.junit.*;
+import org.bytesoft.tsengine.encoders.TooLargeToCompressException;
+import org.bytesoft.tsengine.encoders.VarByteDecoder;
+import org.bytesoft.tsengine.encoders.VarByteEncoder;
+import org.junit.Test;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;

@@ -1,8 +1,13 @@
-import org.junit.*;
-import static org.junit.Assert.*;
-import org.bytesoft.tsengine.qparse.*;
+import org.bytesoft.tsengine.qparse.ExprToken;
+import org.bytesoft.tsengine.qparse.ExpressionTokenizer;
+import org.bytesoft.tsengine.qparse.QueryTreeBuilder;
+import org.bytesoft.tsengine.qparse.QueryTreeNode;
+import org.junit.Test;
 
 import java.text.ParseException;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 
 public class QueryTreeTest {

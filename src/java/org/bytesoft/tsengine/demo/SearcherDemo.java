@@ -1,5 +1,6 @@
 package org.bytesoft.tsengine.demo;
 
+import org.bytesoft.tsengine.IndexingConfig;
 import org.bytesoft.tsengine.QTreePerformer;
 import org.bytesoft.tsengine.WordUtils;
 import org.bytesoft.tsengine.dict.DictRecord;
@@ -9,6 +10,7 @@ import org.bytesoft.tsengine.qparse.ExprToken;
 import org.bytesoft.tsengine.qparse.ExpressionTokenizer;
 import org.bytesoft.tsengine.qparse.QueryTreeBuilder;
 import org.bytesoft.tsengine.qparse.QueryTreeNode;
+import org.bytesoft.tsengine.urls.UrlsCollectionReader;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -17,7 +19,6 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.ParseException;
 import java.util.EnumSet;
@@ -26,12 +27,12 @@ import java.util.EnumSet;
  * This class demonstrates how to use searching in TextSearchEngine.
  */
 class SearcherDemo {
-    Path rindex_path;
-    Path dictionary_path;
+    private IndexingConfig cfg;
 
     DictionarySearcher dictionary;
     FileChannel rindex_file;
     MappedByteBuffer rindex_mem;
+    UrlsCollectionReader urls_reader;
 
     class Word2BlockTransformer implements QTreePerformer.Word2BlockConverter {
 
@@ -67,20 +68,34 @@ class SearcherDemo {
     }
 
     private void openReverseIndex() throws IOException {
-        rindex_file = FileChannel.open(rindex_path, EnumSet.of(StandardOpenOption.READ));
-        rindex_mem  = rindex_file.map(FileChannel.MapMode.READ_ONLY, 0, Files.size(rindex_path));
+        Path path = cfg.GetRindexPath();
+
+        rindex_file = FileChannel.open(path, EnumSet.of(StandardOpenOption.READ));
+        rindex_mem  = rindex_file.map(FileChannel.MapMode.READ_ONLY, 0, Files.size(path));
     }
 
     private void openDictionary() throws IOException {
-        dictionary = new DictionarySearcher(new RandomAccessFile(dictionary_path.toFile(), "r"));
+        Path path = cfg.GetRindexDictPath();
+        dictionary = new DictionarySearcher(new RandomAccessFile(path.toFile(), "r"));
     }
 
-    public SearcherDemo(String db_path) throws IOException {
-        rindex_path = Paths.get(db_path, "rindex.bin");
-        dictionary_path = Paths.get(db_path, "rindex.dic");
+    private void openUrlsCollection() throws IOException {
+        Path path = cfg.GetUrlsPath();
+        Path path_idx = cfg.GetUrlsIdxPath();
+
+        urls_reader = new UrlsCollectionReader(path.toFile(), path_idx.toFile());
+    }
+
+    private void printMatchedDocument(int id) throws IOException {
+        System.out.printf("%4d  %s\n", id, urls_reader.ReadURL(id));
+    }
+
+    public SearcherDemo(IndexingConfig cfg) throws IOException {
+        this.cfg = cfg;
 
         openReverseIndex();
         openDictionary();
+        openUrlsCollection();
     }
 
     private QueryTreeNode parseQuery(String query) throws ParseException {
@@ -88,7 +103,7 @@ class SearcherDemo {
         return QueryTreeBuilder.BuildExpressionTree(tokens);
     }
 
-    public void PerformRequest(String query) throws ParseException {
+    public void PerformRequest(String query) throws ParseException, IOException {
         try {
             Word2BlockTransformer w2block = this.new Word2BlockTransformer();
             QueryTreeNode qtree = parseQuery(query);
@@ -96,8 +111,10 @@ class SearcherDemo {
 
             while (!performer.Finished()) {
                 int id = performer.GetNextDocument();
-                if (id != IdxBlocksIterator.OMEGA_ID)
-                    System.out.println(id);
+                if (id >= urls_reader.GetURLsAmount() || id == IdxBlocksIterator.OMEGA_ID)
+                    break;
+
+                printMatchedDocument(id);
             }
         }
         catch(QTreePerformer.UnsupportedQTreeOperator e) {
@@ -106,12 +123,13 @@ class SearcherDemo {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length < 1) {
-            System.err.println("Usage: " + SearcherDemo.class.getCanonicalName() + " path/to/database [QUERY]...");
+        if (args.length < 2) {
+            System.err.println("Usage: " + SearcherDemo.class.getCanonicalName() + " path/to/database QUERY");
             System.exit(64);
         }
 
-        SearcherDemo searcher = new SearcherDemo(args[0]);
+        String directory = args[0];
+        SearcherDemo searcher = new SearcherDemo(new IndexingConfig(directory));
 
         try {
             searcher.PerformRequest(args[1]);

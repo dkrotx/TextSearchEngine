@@ -1,6 +1,7 @@
-import org.bytesoft.tsengine.dict.*;
-
-import org.junit.*;
+import org.bytesoft.tsengine.dict.DictRecord;
+import org.bytesoft.tsengine.dict.DictionarySearcher;
+import org.bytesoft.tsengine.dict.DictionaryWriter;
+import org.junit.Test;
 
 import java.io.*;
 
