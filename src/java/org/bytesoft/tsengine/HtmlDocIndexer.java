@@ -27,7 +27,7 @@ public class HtmlDocIndexer {
         HashSet<String> uniq_words = new HashSet<>();
 
         for (String w: words) {
-            uniq_words.add(w.toLowerCase());
+            uniq_words.add(WordUtils.NormalizeWord(w));
         }
 
         doc_id++;

@@ -33,7 +33,7 @@ class DictionaryMaker {
     public void CreateDictionary() throws IOException {
         try (DataInputStream idx = new DataInputStream(Files.newInputStream(src_catalog_path))) {
             try {
-                long offset = 0;
+                int offset = 0;
 
                 for(;;) {
                     long word_hash = idx.readLong();

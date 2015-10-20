@@ -23,7 +23,6 @@ public class DictionaryTest {
 
         try (DataOutputStream out = new DataOutputStream(new FileOutputStream(tmpfile))) {
             dic.Write(out);
-            out.close();
         }
 
         try (RandomAccessFile in = new RandomAccessFile(tmpfile, "r")) {
@@ -63,7 +62,6 @@ public class DictionaryTest {
 
         try (DataOutputStream out = new DataOutputStream(new FileOutputStream(tmpfile))) {
             dic.Write(out);
-            out.close();
         }
 
         try (RandomAccessFile in = new RandomAccessFile(tmpfile, "r")) {

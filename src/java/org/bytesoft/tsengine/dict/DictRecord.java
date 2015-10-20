@@ -2,12 +2,12 @@ package org.bytesoft.tsengine.dict;
 
 
 final public class DictRecord implements Comparable<DictRecord> {
-    public long offset;
+    public int offset;
     public int  size;
 
-    static public final int SIZE = 12;
+    static public final int SIZE = 4 + 4;
 
-    public DictRecord(long offset, int size) {
+    public DictRecord(int offset, int size) {
         this.offset = offset;
         this.size = size;
     }

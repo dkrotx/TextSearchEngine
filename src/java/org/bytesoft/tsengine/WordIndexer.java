@@ -1,6 +1,7 @@
 package org.bytesoft.tsengine;
 
-import org.bytesoft.tsengine.encoders.*;
+import org.bytesoft.tsengine.encoders.DeltaIntEncoder;
+import org.bytesoft.tsengine.encoders.VarByteEncoder;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 
 import java.io.DataOutputStream;
@@ -8,11 +9,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static util.hash.MurmurHash3.murmurhash3_x64;
-
 /**
  * WordIndexer class
- * Perform indxation of words in given document id.
+ * Perform indexation of words in given document id.
  */
 public class WordIndexer {
     HashMap<Long, IdxBlockEncoder> words_buf = new HashMap<>();
@@ -30,9 +29,9 @@ public class WordIndexer {
         }
     }
 
-    public void AddWord(String word, int docid) {
-        long hash = murmurhash3_x64(word);
-
+    public void AddWord(String word, int docid)
+    {
+        long hash = WordUtils.GetWordHash(word);
         IdxBlockEncoder comp = words_buf.get(hash);
 
         if (comp == null) {

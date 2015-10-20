@@ -12,7 +12,7 @@ import java.nio.file.Paths;
  * Demonstrates how to use HtmlDocIndexer
  * Usage: class -o path/to/output.file input1 [...]
  */
-public class HtmlIndexerDemo {
+class HtmlIndexerDemo {
 
     private HtmlDocIndexer idx;
     private DataOutputStream idx_data_file;

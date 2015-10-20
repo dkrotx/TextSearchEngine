@@ -49,7 +49,8 @@ public final class DictionarySearcher {
     }
 
     private BucketInfo bucketByKey(long key) {
-        return buckets[(int)(key % buckets.length)];
+        int bucket_id = Math.abs((int)key) % buckets.length;
+        return buckets[bucket_id];
     }
 
     private DictRecord bsearchSingle(long key, BucketInfo bucket) throws IOException {
@@ -67,7 +68,7 @@ public final class DictionarySearcher {
             else if (key > k)
                 low = i + 1;
             else {
-                return new DictRecord(file.readLong(), file.readInt());
+                return new DictRecord(file.readInt(), file.readInt());
             }
         }
 
@@ -111,7 +112,7 @@ public final class DictionarySearcher {
 
                 for (i = lbound + 1; i < rbound; i++) {
                     file.seek(bucket.offset + i*KVSIZE + key_size);
-                    res[out_index++] = new DictRecord(file.readLong(), file.readInt());
+                    res[out_index++] = new DictRecord(file.readInt(), file.readInt());
                 }
 
                 return res;

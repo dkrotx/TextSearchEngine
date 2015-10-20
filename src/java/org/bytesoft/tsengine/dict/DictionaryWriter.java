@@ -30,11 +30,11 @@ final public class DictionaryWriter {
         buckets = new ArrayList[nbuckets];
 
         for(int i = 0; i < nbuckets; i++)
-            buckets[i] = new ArrayList<KVPair>();
+            buckets[i] = new ArrayList<>();
     }
 
     public void Add(long key, DictRecord entry) {
-        int bucket = (int)(Math.abs(key) % buckets.length);
+        int bucket = Math.abs((int)key) % buckets.length;
         buckets[bucket].add( new KVPair(key, entry) );
     }
 
@@ -50,7 +50,7 @@ final public class DictionaryWriter {
     {
         for(KVPair kv: bucket) {
             out.writeLong(kv.key);
-            out.writeLong(kv.value.offset);
+            out.writeInt(kv.value.offset);
             out.writeInt(kv.value.size);
         }
     }
