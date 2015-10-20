@@ -2,8 +2,10 @@
 
 cd "$( dirname $0 )/build/classes/main"
 
-MAIN_CLASS=org.bytesoft.tsengine.demo.HtmlIndexerDemo
-CLSPATH=/usr/share/java/gnu-getopt.jar:/home/dkrot/javalibs/boilerpipe-1.2.0/boilerpipe-1.2.0.jar:/home/dkrot/javalibs/boilerpipe-1.2.0/lib/*:.
+MAIN_CLASS=$1
+shift
 
-JAVA_HOME=/opt/java/jdk-last
-/opt/java/jdk-last/bin/java -cp "$CLSPATH" "$MAIN_CLASS" "$@"
+CLSPATH=/usr/share/java/gnu-getopt.jar:/home/dkrot/javalibs/boilerpipe-1.2.0/boilerpipe-1.2.0.jar:/home/dkrot/javalibs/boilerpipe-1.2.0/lib/*:.
+JAVA_HOME=/opt/java/jdk-latest
+
+/opt/java/jdk-latest/bin/java -cp "$CLSPATH" "$MAIN_CLASS" "$@"

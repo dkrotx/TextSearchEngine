@@ -15,12 +15,15 @@ import java.nio.file.Paths;
 public class HtmlIndexerDemo {
 
     private HtmlDocIndexer idx;
-    private DataOutputStream idxfile;
+    private DataOutputStream idx_data_file;
+    private DataOutputStream idx_catalog_file;
 
     public HtmlIndexerDemo(String out_path) throws FileNotFoundException {
         IndexingConfig cfg = new IndexingConfig();
         idx = new HtmlDocIndexer(cfg);
-        idxfile = new DataOutputStream(new FileOutputStream(out_path));
+
+        idx_data_file = new DataOutputStream(new FileOutputStream(out_path + "/rindex.bin"));
+        idx_catalog_file = new DataOutputStream(new FileOutputStream(out_path + "/rindex.cat"));
     }
 
     public void ParseOneMoreFile(String path) throws IOException, HtmlDocIndexer.HTMLParsingError {
@@ -29,8 +32,9 @@ public class HtmlIndexerDemo {
     }
 
     public void FlushFiles() throws IOException {
-        idx.Flush(idxfile);
-        idxfile.close();
+        idx.Flush(idx_data_file, idx_catalog_file);
+        idx_data_file.close();
+        idx_catalog_file.close();
     }
 
     public static void main(String[] args) {
@@ -47,7 +51,7 @@ public class HtmlIndexerDemo {
         }
 
         if (g.getOptind() == args.length || ofile == null) {
-            System.err.println("Usage: " + HtmlIndexerDemo.class.getCanonicalName() + " -o path/to/output.file input1 [...]");
+            System.err.println("Usage: " + HtmlIndexerDemo.class.getCanonicalName() + " -o path/to/out_directory/ input1 [...]");
             System.exit(64);
         }
 

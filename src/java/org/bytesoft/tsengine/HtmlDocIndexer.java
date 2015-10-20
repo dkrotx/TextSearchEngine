@@ -40,8 +40,8 @@ public class HtmlDocIndexer {
         return widx.GetApproximateSize();
     }
 
-    public void Flush(DataOutputStream out) throws IOException {
-        widx.WriteAndFlush(out);
+    public void Flush(DataOutputStream rindex, DataOutputStream catalog) throws IOException {
+        widx.WriteAndFlush(rindex, catalog);
     }
 
     public void AddText(String text) {

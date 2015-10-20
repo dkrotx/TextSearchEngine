@@ -1,87 +1,67 @@
 package org.bytesoft.tsengine.demo;
 
-import gnu.getopt.Getopt;
 import org.bytesoft.tsengine.dict.DictRecord;
 import org.bytesoft.tsengine.dict.DictionaryWriter;
 
 import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Build dictionary for given inverted index.
  */
 class DictionaryMaker {
 
-    private void skipIndexBlock(DataInput file) throws IOException {
-        // each record is [WORD_HASH:8][BLOCK_SIZE:4][BLOCK_DATA:BLOCK_SIZE]
-        file.skipBytes(Long.SIZE / Byte.SIZE);
-        file.skipBytes(file.readInt());
+    private static final int DICTIONARY_RECORD_SIZE = 8 + 4;
+    private Path src_catalog_path;
+    private Path dictionary_path;
+    private DictionaryWriter dictionary;
+
+    private int estimateNumberOfEntries(Path raw_catalog) throws IOException {
+        return (int)(Files.size(raw_catalog) / DICTIONARY_RECORD_SIZE);
     }
 
-    private int estimateNumberOfEntries(String path) throws IOException {
-        int n = 0;
-
-        try (RandomAccessFile idx = new RandomAccessFile(path, "r")) {
-            long file_size = idx.length();
-
-            while(idx.getFilePointer() < file_size) {
-                skipIndexBlock(idx);
-                n++;
-            }
+    public void writeDictionary() throws IOException {
+        try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(dictionary_path))) {
+            dictionary.Write(out);
         }
-
-        return n;
     }
 
-
-    public void HandleIndexFile(String path, String dict_path) throws IOException {
-        int nrec = estimateNumberOfEntries(path);
-
-        DictionaryWriter dict = new DictionaryWriter(nrec);
-        long offset = 0;
-
-        try (DataInputStream idx = new DataInputStream(new FileInputStream(path))) {
+    public void CreateDictionary() throws IOException {
+        try (DataInputStream idx = new DataInputStream(Files.newInputStream(src_catalog_path))) {
             try {
+                long offset = 0;
+
                 for(;;) {
-                    long whash = idx.readLong();
+                    long word_hash = idx.readLong();
                     int block_size = idx.readInt();
 
-                    dict.Add(whash, new DictRecord(offset, block_size));
+                    dictionary.Add(word_hash, new DictRecord(offset, block_size));
                     offset += block_size;
-                    idx.skipBytes(block_size);
                 }
             }
             catch(EOFException e) {}
-
-            idx.close();
-        }
-
-        try (DataOutputStream out = new DataOutputStream(new FileOutputStream(dict_path))) {
-            dict.Write(out);
-            out.close();
         }
     }
 
+    public DictionaryMaker(String index_directory) throws IOException {
+        src_catalog_path = Paths.get(index_directory, "rindex.cat");
+        dictionary_path = Paths.get(index_directory, "rindex.dic");
+
+        dictionary = new DictionaryWriter(estimateNumberOfEntries(src_catalog_path));
+    }
+
     public static void main(String[] args) throws IOException {
-        Getopt g = new Getopt("HtmlIndexerDemo", args, "o:");
-        int c;
-        String ofile = null;
-
-        while( (c = g.getopt()) != -1 ) {
-            switch(c) {
-                case 'o':
-                    ofile = g.getOptarg();
-                    break;
-            }
-        }
-
-        final int nargs = args.length - g.getOptind();
-
-        if (nargs != 1 || ofile == null) {
-            System.err.println("Usage: " + HtmlIndexerDemo.class.getCanonicalName() + " -o path/to/output.dic rindex");
+        if (args.length != 1) {
+            System.err.println("Usage: " + HtmlIndexerDemo.class.getCanonicalName() + " path/to/rindex");
             System.exit(64);
         }
 
-        DictionaryMaker dm = new DictionaryMaker();
-        dm.HandleIndexFile(args[g.getOptind()], ofile);
+        DictionaryMaker dm = new DictionaryMaker(args[0]);
+        dm.CreateDictionary();
+        dm.writeDictionary();
     }
 }

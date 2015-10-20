@@ -1,6 +1,7 @@
 package org.bytesoft.tsengine;
 
 import org.bytesoft.tsengine.encoders.*;
+import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,17 +15,17 @@ import static util.hash.MurmurHash3.murmurhash3_x64;
  * Perform indxation of words in given document id.
  */
 public class WordIndexer {
-    HashMap<Long, DeltaIntEncoder> words_buf = new HashMap<>();
+    HashMap<Long, IdxBlockEncoder> words_buf = new HashMap<>();
     final int SIZE_WORD_ENTRY = 16;
 
     long acc_size = 0;
 
-    private void addDocidToEncoder(DeltaIntEncoder comp, int docid)
+    private void addDocIDToEncoder(IdxBlockEncoder enc, int id)
     {
         try {
-            long sz = comp.GetStoreSize();
-            comp.AddNumber(docid);
-            acc_size += comp.GetStoreSize() - sz;
+            long sz = enc.GetStoreSize();
+            enc.AddDocID(id);
+            acc_size += enc.GetStoreSize() - sz;
         } catch (Exception e) {
         }
     }
@@ -32,15 +33,15 @@ public class WordIndexer {
     public void AddWord(String word, int docid) {
         long hash = murmurhash3_x64(word);
 
-        DeltaIntEncoder comp = words_buf.get(hash);
+        IdxBlockEncoder comp = words_buf.get(hash);
 
         if (comp == null) {
-            comp = new DeltaIntEncoder(new VarByteEncoder());
+            comp = new IdxBlockEncoder(new DeltaIntEncoder(new VarByteEncoder()));
             words_buf.put(hash, comp);
             acc_size += SIZE_WORD_ENTRY;
         }
 
-        addDocidToEncoder(comp, docid);
+        addDocIDToEncoder(comp, docid);
     }
 
     public long GetApproximateSize() {
@@ -49,15 +50,18 @@ public class WordIndexer {
 
     /**
      * Flush encoded content in given stream
-     * @param out output stream to write binary data
+     *
+     * @param rindex reverse index file
+     * @param catalog file to store word hashes and rindex-records size
      */
-    public void WriteAndFlush(DataOutputStream out) throws IOException {
-        for(Map.Entry<Long, DeltaIntEncoder> entry: words_buf.entrySet()) {
-            DeltaIntEncoder enc = entry.getValue();
+    public void WriteAndFlush(DataOutputStream rindex, DataOutputStream catalog) throws IOException {
+        for(Map.Entry<Long, IdxBlockEncoder> entry: words_buf.entrySet()) {
+            IdxBlockEncoder enc = entry.getValue();
 
-            out.writeLong(entry.getKey());
-            out.writeInt(enc.GetStoreSize());
-            out.write(enc.GetBytes());
+            int size = (int)enc.Write(rindex);
+
+            catalog.writeLong(entry.getKey());
+            catalog.writeInt(size);
         }
         words_buf.clear();
     }
