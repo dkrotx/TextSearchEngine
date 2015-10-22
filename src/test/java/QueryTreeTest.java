@@ -71,8 +71,14 @@ public class QueryTreeTest {
     public void testSingleWord() {
         assertEquals("word", parseQuery("word"));
         assertEquals("word123", parseQuery("word123"));
+    }
+
+    @Test
+    public void testCyrillic() {
         assertEquals("слово", parseQuery("слово"));
         assertEquals("слово123", parseQuery("слово123"));
+        assertEquals("слово | буква", parseQuery("слово | буква"));
+        assertEquals("(предложение & Слово) & !сказуемое", parseQuery("предложение & Слово & !сказуемое"));
     }
 
     @Test

@@ -18,5 +18,6 @@
     <orderEntry type="library" scope="TEST" name="Gradle: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="library" exported="" name="boilerpipe" level="project" />
     <orderEntry type="library" exported="" name="gnu-getopt" level="application" />
+    <orderEntry type="library" exported="" name="lemmatizer_native" level="project" />
   </component>
 </module>

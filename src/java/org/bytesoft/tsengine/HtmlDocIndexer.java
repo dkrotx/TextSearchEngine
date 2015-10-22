@@ -2,6 +2,7 @@ package org.bytesoft.tsengine;
 
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import de.l3s.boilerpipe.extractors.DefaultExtractor;
+import org.bytesoft.tsengine.text.TextTokenizer;
 import org.bytesoft.tsengine.urls.UrlsCollectionWriter;
 
 import java.io.DataOutputStream;
@@ -21,6 +22,7 @@ public class HtmlDocIndexer {
     private DataOutputStream rindex_writer;
     private DataOutputStream catalog_writer;
     private UrlsWriter urls_writer;
+    private TextTokenizer text_tokenizer = new TextTokenizer();
 
     private class UrlsWriter {
         UrlsCollectionWriter writer;
@@ -56,11 +58,12 @@ public class HtmlDocIndexer {
         urls_writer = this.new UrlsWriter();
     }
 
-    public void AddDocumentWords(String[] words) {
+    public void AddDocumentWords() {
         HashSet<String> uniq_words = new HashSet<>();
 
-        for (String w: words) {
-            uniq_words.add(WordUtils.NormalizeWord(w));
+        while(text_tokenizer.hasNextToken()) {
+            String word = text_tokenizer.getNextToken();
+            uniq_words.add(WordUtils.GetWordFirstForm(word));
         }
 
         doc_id++;
@@ -79,8 +82,8 @@ public class HtmlDocIndexer {
     }
 
     public void AddText(String text) {
-        String[] words = text.split("\\s+");
-        AddDocumentWords(words);
+        text_tokenizer.TokenizeText(text);
+        AddDocumentWords();
     }
 
     public void AddDocument(String url, String html) throws HTMLParsingError, IOException {

@@ -15,4 +15,8 @@ public final class WordUtils {
     static public long GetWordHash(String word) {
         return murmurhash3_x64(word);
     }
+
+    static public String GetWordFirstForm(String word) {
+        return org.bytesoft.lemmatizer.LemmatizerNative.GetFirstForm(word);
+    }
 }

@@ -46,7 +46,7 @@ class SearcherDemo {
 
         @Override
         public IdxBlocksIterator GetIndexBlockIterator(String word) {
-            long hash = WordUtils.GetWordHash(WordUtils.NormalizeWord(word));
+            long hash = WordUtils.GetWordHash(WordUtils.GetWordFirstForm(word));
             IdxBlocksIterator blocks_iter = null;
 
             try {
