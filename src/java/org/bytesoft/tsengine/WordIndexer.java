@@ -43,6 +43,7 @@ public class WordIndexer {
         addDocIDToEncoder(comp, docid);
     }
 
+
     public long GetApproximateSize() {
         return acc_size;
     }
@@ -63,5 +64,6 @@ public class WordIndexer {
             catalog.writeInt(size);
         }
         words_buf.clear();
+        acc_size = 0;
     }
 }

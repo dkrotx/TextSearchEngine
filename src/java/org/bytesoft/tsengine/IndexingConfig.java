@@ -16,7 +16,7 @@ public class IndexingConfig {
     private Path rindex_urls_idx_path;
 
     public IndexingConfig(String directory) {
-        max_membuf = 16* (1<<20);
+        max_membuf = (1<<20);
 
         rindex_path = Paths.get(directory, "rindex.bin");
         rindex_cat_path = Paths.get(directory, "rindex.cat");
