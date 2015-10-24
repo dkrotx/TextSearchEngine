@@ -63,13 +63,11 @@ public class HtmlDocIndexer {
 
         while(text_tokenizer.hasNextToken()) {
             String word = text_tokenizer.getNextToken();
-            //System.out.printf("%s => %s\n", word, uniq_words.size());
             uniq_words.add(WordUtils.GetWordFirstForm(word));
         }
 
         doc_id++;
         for (String w: uniq_words) {
-            //System.out.printf("%d %s\n", doc_id, w);
             widx.AddWord(w, doc_id);
         }
     }
@@ -82,7 +80,6 @@ public class HtmlDocIndexer {
         widx.WriteAndFlush(rindex_writer, catalog_writer);
         urls_writer.Flush();
 
-        System.out.println("Flushing index");
         rindex_writer.flush();
         catalog_writer.flush();
     }
@@ -102,7 +99,6 @@ public class HtmlDocIndexer {
             throw new HTMLParsingError("Failed to parse HTML document" + e.getMessage());
         }
 
-        //System.out.println("Approx size = " + GetApproximateSize());
         if (GetApproximateSize() >= cfg.GetMaxMemBuf()) {
             Flush();
         }
