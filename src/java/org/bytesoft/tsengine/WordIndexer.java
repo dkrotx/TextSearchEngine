@@ -1,6 +1,7 @@
 package org.bytesoft.tsengine;
 
 import org.bytesoft.tsengine.encoders.DeltaIntEncoder;
+import org.bytesoft.tsengine.encoders.FibonacciEncoder;
 import org.bytesoft.tsengine.encoders.VarByteEncoder;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 
@@ -35,7 +36,7 @@ public class WordIndexer {
         IdxBlockEncoder comp = words_buf.get(hash);
 
         if (comp == null) {
-            comp = new IdxBlockEncoder(new DeltaIntEncoder(new VarByteEncoder()));
+            comp = new IdxBlockEncoder(new DeltaIntEncoder(new FibonacciEncoder()));
             words_buf.put(hash, comp);
             acc_size += SIZE_WORD_ENTRY;
         }

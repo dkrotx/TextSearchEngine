@@ -46,12 +46,12 @@ public class FibonacciEncoder implements IntCompressor {
 
         // write fibonacci number from lower bits, so '11' will be terminator
         for (long fibnum = bin2fib(num); fibnum != 0; fibnum >>= 1)
-            add_bit((fibnum & 1) == 0 ? false : true);
+            add_bit((fibnum & 1) != 0);
 
         add_bit(true);
     }
 
-    public int GetStoreSize() { return storage.size();  }
+    public int GetStoreSize() { return (bit_index >> 3) + 1;  }
     public byte[]  GetBytes() { return storage.toByteArray(); }
 
     /**
