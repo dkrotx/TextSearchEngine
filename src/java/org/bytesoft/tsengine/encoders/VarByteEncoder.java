@@ -17,7 +17,7 @@ public class VarByteEncoder implements IntCompressor {
             throw new TooLargeToCompressException("Number too large to compress with varbyte");
         }
 
-        // encode from highest bits, it will be faster to decode then
+        // encode from highest bits_per_number, it will be faster to decode then
         for (int shift = 21; shift > 0; shift -= 7) {
             if (num >= (1 << shift))
                 storage.write((num & (0x7f << shift)) >> shift | 0x80);

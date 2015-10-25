@@ -44,7 +44,7 @@ public class FibonacciEncoder implements IntCompressor {
             throw new TooLargeToCompressException("Fibonacci can't encode zero or negatives");
         }
 
-        // write fibonacci number from lower bits, so '11' will be terminator
+        // write fibonacci number from lower bits_per_number, so '11' will be terminator
         for (long fibnum = bin2fib(num); fibnum != 0; fibnum >>= 1)
             add_bit((fibnum & 1) != 0);
 

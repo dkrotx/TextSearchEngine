@@ -59,7 +59,7 @@ public class EliasGammaEncoder implements IntCompressor {
 
         // BitSet.toByteArray has "nice" bug-feature:
         // it silently ignores final zeroes.
-        // So, if you encode "0xff, 0x00" (16 bits) you'll get only 1 byte!
+        // So, if you encode "0xff, 0x00" (16 bits_per_number) you'll get only 1 byte!
         byte[] exact_bytes = new byte[exact_size];
         System.arraycopy(bytes, 0, exact_bytes, 0, bytes.length);
 
