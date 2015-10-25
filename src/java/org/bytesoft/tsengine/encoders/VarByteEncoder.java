@@ -38,4 +38,8 @@ public class VarByteEncoder implements IntCompressor {
     public static int GetMaxEncodingInt() {
         return 1 << 28;
     }
+
+    public boolean CanEncodeZero() {
+        return true;
+    }
 }

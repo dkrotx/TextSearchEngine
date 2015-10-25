@@ -100,6 +100,7 @@ public class HtmlDocIndexer {
         }
 
         if (GetApproximateSize() >= cfg.GetMaxMemBuf()) {
+            System.out.println("Flush");
             Flush();
         }
     }

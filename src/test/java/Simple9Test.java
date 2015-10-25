@@ -3,6 +3,7 @@ import org.junit.Test;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Random;
 
 import static org.junit.Assert.*;
@@ -11,13 +12,13 @@ import static org.junit.Assert.*;
  * Test Simple9 encoding/decoding
  */
 public class Simple9Test {
-    byte[] encodeSingleNumber(int x) throws TooLargeToCompressException {
+    byte[] encodeSingleNumber(int x) throws IntCompressor.TooLargeToCompressException {
         Simple9Encoder enc = new Simple9Encoder();
         enc.AddNumber(x);
         return enc.GetBytes();
     }
 
-    byte[] encodeNumbers(int ... number) throws TooLargeToCompressException {
+    byte[] encodeNumbers(int ... number) throws IntCompressor.TooLargeToCompressException {
         Simple9Encoder enc = new Simple9Encoder();
 
         for (int x: number)
@@ -59,6 +60,17 @@ public class Simple9Test {
     }
 
     @Test
+    public void TestZeroes() throws Exception {
+        final int packs = 4;
+        int[] zeroes = new int[28*packs];
+
+        Arrays.fill(zeroes, 0);
+        int[]extracted = extractNumbers(zeroes.length, encodeNumbers(zeroes));
+
+        assertArrayEquals(zeroes, extracted);
+    }
+
+    @Test
     public void TestPackEncoding() throws Exception {
         // encoding a single number isn't so interesting in Simple9
         // so test with several numbers
@@ -93,7 +105,7 @@ public class Simple9Test {
             Simple9Encoder enc = new Simple9Encoder();
             enc.AddNumber(0x40000000);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             caught = true;
         }
         finally {
@@ -106,7 +118,7 @@ public class Simple9Test {
             Simple9Encoder enc = new Simple9Encoder();
             enc.AddNumber(-1);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             caught = true;
         }
         finally {
@@ -117,13 +129,13 @@ public class Simple9Test {
             Simple9Encoder enc = new Simple9Encoder();
             enc.AddNumber(0);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             fail("0 should be OK for simple9");
         }
     }
 
     @Test
-    public void TestEncodingAndDecoding() throws TooLargeToCompressException {
+    public void TestEncodingAndDecoding() throws IntCompressor.TooLargeToCompressException {
         // test what arbitrary encoded data can be decoded
         int[] numbers = new int[1000];
         Random rand = new Random();

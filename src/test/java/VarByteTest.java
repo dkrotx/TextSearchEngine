@@ -1,4 +1,5 @@
-import org.bytesoft.tsengine.encoders.TooLargeToCompressException;
+
+import org.bytesoft.tsengine.encoders.IntCompressor;
 import org.bytesoft.tsengine.encoders.VarByteDecoder;
 import org.bytesoft.tsengine.encoders.VarByteEncoder;
 import org.junit.Test;
@@ -14,7 +15,7 @@ import static org.junit.Assert.*;
  */
 public class VarByteTest {
 
-    byte[] encodeSingleNumber(int x) throws TooLargeToCompressException {
+    byte[] encodeSingleNumber(int x) throws IntCompressor.TooLargeToCompressException {
         VarByteEncoder enc = new VarByteEncoder();
         enc.AddNumber(x);
         return enc.GetBytes();
@@ -36,7 +37,7 @@ public class VarByteTest {
     }
 
     @Test
-    public void TestVarByteEncoding() throws TooLargeToCompressException {
+    public void TestVarByteEncoding() throws IntCompressor.TooLargeToCompressException {
         assertArrayEquals(new byte[]{1}, encodeSingleNumber(1));
         assertArrayEquals(new byte[]{127}, encodeSingleNumber(127));
         assertArrayEquals(new byte[]{(byte)0b10000001, 0b00000000}, encodeSingleNumber(128));
@@ -50,7 +51,7 @@ public class VarByteTest {
             VarByteEncoder enc = new VarByteEncoder();
             enc.AddNumber(0);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             fail("0 should be OK for varbyte");
         }
 
@@ -58,7 +59,7 @@ public class VarByteTest {
             VarByteEncoder enc = new VarByteEncoder();
             enc.AddNumber(1<<28 - 1);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             fail("268435455 is OK for varbyte");
         }
 
@@ -67,7 +68,7 @@ public class VarByteTest {
             enc.AddNumber(-17);
             fail("Negative numbers should not work in varbyte");
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
         }
 
         try {
@@ -75,7 +76,7 @@ public class VarByteTest {
             enc.AddNumber(1<<28);
             fail("268435456+ should not work in varbyte");
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
         }
     }
 
@@ -109,7 +110,7 @@ public class VarByteTest {
     }
 
     @Test
-    public void TestEncodingAndDecoding() throws TooLargeToCompressException {
+    public void TestEncodingAndDecoding() throws IntCompressor.TooLargeToCompressException {
         // test what arbitrary encoded data can be decoded
         int[] numbers = new int[1000];
         Random rand = new Random();

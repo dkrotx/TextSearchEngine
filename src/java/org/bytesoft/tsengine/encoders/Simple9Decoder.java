@@ -37,4 +37,7 @@ public class Simple9Decoder implements IntDecompressor {
 
         return unpacked[unpacked_offset++];
     }
+
+    @Override
+    public boolean CanDecodeZero() { return true; }
 }

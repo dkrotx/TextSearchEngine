@@ -28,4 +28,7 @@ public class VarByteDecoder implements IntDecompressor {
 
         return res;
     }
+
+    @Override
+    public boolean CanDecodeZero() { return true; }
 }

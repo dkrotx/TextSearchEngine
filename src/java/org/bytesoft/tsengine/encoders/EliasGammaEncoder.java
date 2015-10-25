@@ -33,7 +33,7 @@ public class EliasGammaEncoder implements IntCompressor {
      * Add number to elias bit-buffer
      * @param num integer to encode
      */
-    public void AddNumber(int num) throws TooLargeToCompressException {
+    public void AddNumber(int num) throws IntCompressor.TooLargeToCompressException {
         if (num <= 0 || num > GetMaxEncodingInt()) {
             throw new TooLargeToCompressException("Number too large to compress with Elias Gamma");
         }
@@ -74,5 +74,9 @@ public class EliasGammaEncoder implements IntCompressor {
      */
     public static int GetMaxEncodingInt() {
         return Integer.MAX_VALUE;
+    }
+
+    public boolean CanEncodeZero() {
+        return true;
     }
 }

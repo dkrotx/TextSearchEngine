@@ -1,7 +1,7 @@
 import org.bytesoft.tsengine.encoders.FibonacciDecoder;
 import org.bytesoft.tsengine.encoders.FibonacciEncoder;
-import org.bytesoft.tsengine.encoders.TooLargeToCompressException;
 
+import org.bytesoft.tsengine.encoders.IntCompressor;
 import org.junit.*;
 
 import java.nio.BufferUnderflowException;
@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
  * Test Fibonacci encoding/decoding
  */
 public class FibonacciTest {
-    byte[] encodeSingleNumber(int x) throws TooLargeToCompressException {
+    byte[] encodeSingleNumber(int x) throws IntCompressor.TooLargeToCompressException {
         FibonacciEncoder enc = new FibonacciEncoder();
         enc.AddNumber(x);
         return enc.GetBytes();
@@ -54,7 +54,7 @@ public class FibonacciTest {
             FibonacciEncoder enc = new FibonacciEncoder();
             enc.AddNumber(0);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             caught = true;
         }
         finally {
@@ -67,7 +67,7 @@ public class FibonacciTest {
             FibonacciEncoder enc = new FibonacciEncoder();
             enc.AddNumber(-1);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             caught = true;
         }
         finally {
@@ -78,13 +78,13 @@ public class FibonacciTest {
             FibonacciEncoder enc = new FibonacciEncoder();
             enc.AddNumber(Integer.MAX_VALUE);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             fail("max integer should be OK for fibonacci");
         }
     }
 
     @Test
-    public void TestEncodingAndDecoding() throws TooLargeToCompressException {
+    public void TestEncodingAndDecoding() throws IntCompressor.TooLargeToCompressException {
         // test what arbitrary encoded data can be decoded
         int[] numbers = new int[1000];
         Random rand = new Random();

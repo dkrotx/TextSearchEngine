@@ -1,5 +1,5 @@
 import org.bytesoft.tsengine.QTreePerformer;
-import org.bytesoft.tsengine.encoders.TooLargeToCompressException;
+import org.bytesoft.tsengine.encoders.IntCompressor;
 import org.bytesoft.tsengine.idxblock.IdxBlocksIterator;
 import org.bytesoft.tsengine.qparse.ExprToken;
 import org.bytesoft.tsengine.qparse.ExpressionTokenizer;
@@ -42,7 +42,7 @@ public class QTreePerformerTest {
         }
 
         public IdxBlockStorage
-        AddWord(String word, int ... posting) throws TooLargeToCompressException, IOException {
+        AddWord(String word, int ... posting) throws IntCompressor.TooLargeToCompressException, IOException {
             ArrayList<ByteBuffer> bufs = word2bufs.get(word);
 
             if (bufs == null) {

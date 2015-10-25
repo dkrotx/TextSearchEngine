@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
  * Test Elias-Gamma encoding/decoding
  */
 public class EliasGammaTest {
-    byte[] encodeSingleNumber(int x) throws TooLargeToCompressException {
+    byte[] encodeSingleNumber(int x) throws IntCompressor.TooLargeToCompressException {
         EliasGammaEncoder enc = new EliasGammaEncoder();
         enc.AddNumber(x);
         return enc.GetBytes();
@@ -51,7 +51,7 @@ public class EliasGammaTest {
             EliasGammaEncoder enc = new EliasGammaEncoder();
             enc.AddNumber(0);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             caught = true;
         }
         finally {
@@ -64,7 +64,7 @@ public class EliasGammaTest {
             EliasGammaEncoder enc = new EliasGammaEncoder();
             enc.AddNumber(-1);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             caught = true;
         }
         finally {
@@ -75,13 +75,13 @@ public class EliasGammaTest {
             EliasGammaEncoder enc = new EliasGammaEncoder();
             enc.AddNumber(Integer.MAX_VALUE);
         }
-        catch (TooLargeToCompressException e) {
+        catch (IntCompressor.TooLargeToCompressException e) {
             fail("max integer should be OK for fibonacci");
         }
     }
 
     @Test
-    public void TestEncodingAndDecoding() throws TooLargeToCompressException {
+    public void TestEncodingAndDecoding() throws IntCompressor.TooLargeToCompressException {
         // test what arbitrary encoded data can be decoded
         int[] numbers = new int[1000];
         Random rand = new Random();

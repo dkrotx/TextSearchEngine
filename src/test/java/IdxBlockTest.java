@@ -1,4 +1,3 @@
-import org.bytesoft.tsengine.encoders.DeltaIntEncoder;
 import org.bytesoft.tsengine.encoders.VarByteEncoder;
 import org.bytesoft.tsengine.idxblock.IdxBlockDecoder;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
@@ -18,7 +17,7 @@ import static org.junit.Assert.*;
 public class IdxBlockTest {
     @Test
     public void TestIndexBlock() throws Exception {
-        IdxBlockEncoder enc = new IdxBlockEncoder(new DeltaIntEncoder(new VarByteEncoder()));
+        IdxBlockEncoder enc = new IdxBlockEncoder(new VarByteEncoder());
         int[] postings = new int[] { 1, 55, 3733, 4000 };
 
         IdxBlockDecoder dec = new IdxBlockDecoder( IdxBlockUtils.makeIndexBlock(postings) );

@@ -1,6 +1,6 @@
 package org.bytesoft.tsengine.idxblock;
 
-import org.bytesoft.tsengine.encoders.DeltaIntDecoder;
+import org.bytesoft.tsengine.encoders.IntDecompressor;
 import org.bytesoft.tsengine.encoders.VarByteDecoder;
 
 import java.nio.ByteBuffer;
@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
  */
 public class IdxBlockDecoder {
     private ByteBuffer block_buf;
-    private DeltaIntDecoder docid_decoder;
+    private IntDecompressor docid_decoder;
 
     private int ndocs = -1;
     private int cur_docs_offset = 0;
@@ -21,8 +21,7 @@ public class IdxBlockDecoder {
         block_buf = mem;
         readHeader();
 
-        // TODO: select decoder from header
-        docid_decoder = new DeltaIntDecoder(new VarByteDecoder(mem.slice()));
+        docid_decoder = new VarByteDecoder(mem.slice());
     }
 
     /**
@@ -38,7 +37,16 @@ public class IdxBlockDecoder {
      * @return docid (you may cache it, or use {@code GetCurrentDocID()}
      */
     public int ReadNext() {
-        cur_docid = docid_decoder.ExtractNumber();
+        if (cur_docid == -1)
+            cur_docid = docid_decoder.ExtractNumber() - 1;
+        else {
+            int delta = docid_decoder.ExtractNumber();
+            if (docid_decoder.CanDecodeZero())
+                delta++;
+
+            cur_docid += delta;
+        }
+
         cur_docs_offset++;
         return cur_docid;
     }

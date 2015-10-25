@@ -31,4 +31,7 @@ public class FibonacciDecoder implements IntDecompressor {
 
         return res;
     }
+
+    @Override
+    public boolean CanDecodeZero() { return false; }
 }

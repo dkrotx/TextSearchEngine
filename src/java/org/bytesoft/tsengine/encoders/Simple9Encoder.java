@@ -120,4 +120,9 @@ public class Simple9Encoder implements IntCompressor {
     public static int GetMaxEncodingInt() {
         return 0x0fffffff;
     }
+
+    @Override
+    public boolean CanEncodeZero() {
+        return true;
+    }
 }

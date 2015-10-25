@@ -63,9 +63,9 @@ public class FibonacciEncoder implements IntCompressor {
      * @param num integer to encode
      * @throws TooLargeToCompressException only if num is zero or negative
      */
-    public void AddNumber(int num) throws TooLargeToCompressException {
+    public void AddNumber(int num) throws IntCompressor.TooLargeToCompressException {
         if (num <= 0) {
-            throw new TooLargeToCompressException("Fibonacci can't encode zero or negatives");
+            throw new IntCompressor.TooLargeToCompressException("Fibonacci can't encode zero or negatives");
         }
 
         // write fibonacci number from lower bits_per_number, so '11' will be terminator
@@ -86,5 +86,10 @@ public class FibonacciEncoder implements IntCompressor {
      */
     public static int GetMaxEncodingInt() {
         return Integer.MAX_VALUE;
+    }
+
+
+    public boolean CanEncodeZero() {
+        return false;
     }
 }
