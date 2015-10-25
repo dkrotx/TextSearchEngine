@@ -1,19 +1,43 @@
 package org.bytesoft.tsengine.encoders;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 
 /**
  * Fibonacci encoder - class for fibonacci bit encoding
  */
 public class FibonacciEncoder implements IntCompressor {
+
+    static int[] FIB_SEQUENCE;
+
+    static {
+        ArrayList<Integer> sequence = new ArrayList<>();
+
+        sequence.add(1);
+        sequence.add(1);
+
+        for(;;)
+        {
+            long n = (long)sequence.get(sequence.size() - 2) + sequence.get(sequence.size() - 1);
+            if (n > (long)Integer.MAX_VALUE)
+                break;
+
+            sequence.add((int)n);
+        }
+
+        FIB_SEQUENCE = new int[sequence.size() - 1];
+        for (int i = 1; i < sequence.size(); i++)
+            FIB_SEQUENCE[i - 1] = sequence.get(i);
+    }
+
     BitSet storage = new BitSet();
     int bit_index = 0;
 
     private long bin2fib(int num) {
-        int high = FibonacciSequence.FIB_SEQUENCE.length - 1;
+        int high = FIB_SEQUENCE.length - 1;
 
-        for(int i = 0 ; i < FibonacciSequence.FIB_SEQUENCE.length; i++)
-            if (FibonacciSequence.FIB_SEQUENCE[i] > num) {
+        for(int i = 0 ; i < FIB_SEQUENCE.length; i++)
+            if (FIB_SEQUENCE[i] > num) {
                 high = i - 1;
                 break;
             }
@@ -21,8 +45,8 @@ public class FibonacciEncoder implements IntCompressor {
         long result = 0;
 
         for(int i = high; i >= 0 && num != 0; i--) {
-            if (num >= FibonacciSequence.FIB_SEQUENCE[i]) {
-                num -= FibonacciSequence.FIB_SEQUENCE[i];
+            if (num >= FIB_SEQUENCE[i]) {
+                num -= FIB_SEQUENCE[i];
                 result |= (1L << i);
             }
         }

@@ -24,7 +24,7 @@ public class FibonacciDecoder implements IntDecompressor {
             prev = bit, bit = bitbuf.readBit())
         {
             if (bit)
-                res += FibonacciSequence.FIB_SEQUENCE[idx];
+                res += FibonacciEncoder.FIB_SEQUENCE[idx];
 
             idx++;
         }
