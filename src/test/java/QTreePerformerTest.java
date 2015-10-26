@@ -1,4 +1,5 @@
 import org.bytesoft.tsengine.QTreePerformer;
+import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.encoders.IntCompressor;
 import org.bytesoft.tsengine.idxblock.IdxBlocksIterator;
 import org.bytesoft.tsengine.qparse.ExprToken;
@@ -38,7 +39,10 @@ public class QTreePerformerTest {
             for (int i = 0; i < bufs_orig.size(); i++)
                 bufs_copy[i] = bufs_orig.get(i).slice();
 
-            return new IdxBlocksIterator(bufs_copy);
+            EncodersFactory factory = new EncodersFactory();
+            factory.SetCurrentDecoder(EncodersFactory.EncodingMethods.VAR_BYTE);
+
+            return new IdxBlocksIterator(bufs_copy, factory);
         }
 
         public IdxBlockStorage

@@ -1,5 +1,6 @@
 package org.bytesoft.tsengine.idxblock;
 
+import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.encoders.IntDecompressor;
 import org.bytesoft.tsengine.encoders.VarByteDecoder;
 
@@ -17,11 +18,11 @@ public class IdxBlockDecoder {
     private int cur_docs_offset = 0;
     private int cur_docid = -1;
 
-    public IdxBlockDecoder(ByteBuffer mem) {
+    public IdxBlockDecoder(ByteBuffer mem, EncodersFactory decoder_factory) {
         block_buf = mem;
         readHeader();
 
-        docid_decoder = new VarByteDecoder(mem.slice());
+        docid_decoder = decoder_factory.MakeDecoder(mem.slice());
     }
 
     /**

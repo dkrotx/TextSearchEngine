@@ -3,6 +3,7 @@ package org.bytesoft.tsengine.demo;
 import gnu.getopt.Getopt;
 import org.bytesoft.tsengine.HtmlDocIndexer;
 import org.bytesoft.tsengine.IndexingConfig;
+import org.bytesoft.tsengine.info.IndexInfoWriter;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -19,8 +20,8 @@ class HtmlIndexerDemo {
 
     private HtmlDocIndexer idx;
 
-    public HtmlIndexerDemo(String out_path) throws IOException {
-        IndexingConfig cfg = new IndexingConfig(out_path);
+    public HtmlIndexerDemo(String config_file) throws IOException, IndexingConfig.BadConfigFormat {
+        IndexingConfig cfg = new IndexingConfig(config_file);
         idx = new HtmlDocIndexer(cfg);
     }
 
@@ -75,18 +76,19 @@ class HtmlIndexerDemo {
 
     public void Flush() throws IOException {
         idx.Flush();
+        idx.WriteIndexInfo();
     }
 
     public static void main(String[] args) throws Exception {
-        Getopt g = new Getopt("HtmlIndexerDemo", args, "o:p");
+        Getopt g = new Getopt("HtmlIndexerDemo", args, "c:p");
         int c;
         boolean packed_input = false;
-        String index_directory = null;
+        String config_file = null;
 
         while( (c = g.getopt()) != -1 ) {
             switch(c) {
-                case 'o':
-                    index_directory = g.getOptarg();
+                case 'c':
+                    config_file = g.getOptarg();
                     break;
                 case 'p':
                     packed_input = true;
@@ -94,17 +96,17 @@ class HtmlIndexerDemo {
             }
         }
 
-        if (g.getOptind() == args.length || index_directory == null) {
-            System.err.println("Usage: " + HtmlIndexerDemo.class.getCanonicalName() + " -o path/to/out_directory input1 [...]");
+        if (g.getOptind() == args.length || config_file == null) {
+            System.err.println("Usage: " + HtmlIndexerDemo.class.getCanonicalName() + " -c config.file input1 [...]");
             System.exit(64);
         }
 
         HtmlIndexerDemo demo = null;
         try {
-            demo = new HtmlIndexerDemo(index_directory);
+            demo = new HtmlIndexerDemo(config_file);
         }
         catch(IOException e) {
-            System.err.println("Can't create index at " + index_directory + ": " + e.getMessage());
+            System.err.println("Can't create index at " + config_file + ": " + e.getMessage());
             System.exit(1);
         }
 

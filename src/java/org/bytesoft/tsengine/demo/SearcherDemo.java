@@ -1,11 +1,14 @@
 package org.bytesoft.tsengine.demo;
 
+import gnu.getopt.Getopt;
 import org.bytesoft.tsengine.IndexingConfig;
 import org.bytesoft.tsengine.QTreePerformer;
 import org.bytesoft.tsengine.WordUtils;
 import org.bytesoft.tsengine.dict.DictRecord;
 import org.bytesoft.tsengine.dict.DictionarySearcher;
+import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.idxblock.IdxBlocksIterator;
+import org.bytesoft.tsengine.info.IndexInfoReader;
 import org.bytesoft.tsengine.qparse.ExprToken;
 import org.bytesoft.tsengine.qparse.ExpressionTokenizer;
 import org.bytesoft.tsengine.qparse.QueryTreeBuilder;
@@ -33,8 +36,16 @@ class SearcherDemo {
     FileChannel rindex_file;
     MappedByteBuffer rindex_mem;
     UrlsCollectionReader urls_reader;
+    IndexInfoReader idx_info;
 
     class Word2BlockTransformer implements QTreePerformer.Word2BlockConverter {
+
+        EncodersFactory decoder_factory;
+
+        public Word2BlockTransformer() {
+            decoder_factory = new EncodersFactory();
+            decoder_factory.SetCurrentDecoder(idx_info.GetEncodingMethod());
+        }
 
         private ByteBuffer getMemoryByDictRecord(DictRecord rec) {
             rindex_mem.position(rec.offset);
@@ -57,7 +68,7 @@ class SearcherDemo {
                     for (int i = 0; i < records.length; i++)
                         areas[i] = getMemoryByDictRecord(records[i]);
 
-                    blocks_iter = new IdxBlocksIterator(areas);
+                    blocks_iter = new IdxBlocksIterator(areas, decoder_factory);
                 }
             }
             catch(IOException e)
@@ -90,8 +101,10 @@ class SearcherDemo {
         System.out.printf("%4d  %s\n", id, urls_reader.ReadURL(id));
     }
 
-    public SearcherDemo(IndexingConfig cfg) throws IOException {
+    public SearcherDemo(IndexingConfig cfg) throws IOException, IndexInfoReader.IndexInfoFormatError {
         this.cfg = cfg;
+
+        idx_info = new IndexInfoReader(cfg);
 
         openReverseIndex();
         openDictionary();
@@ -122,17 +135,32 @@ class SearcherDemo {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        if (args.length < 2) {
-            System.err.println("Usage: " + SearcherDemo.class.getCanonicalName() + " path/to/database QUERY");
+    public static void main(String[] args) throws IOException,
+            IndexingConfig.BadConfigFormat,
+            IndexInfoReader.IndexInfoFormatError
+    {
+        Getopt g = new Getopt("SearcherDemo", args, "c:");
+        int c;
+        String config_file = null;
+
+        while( (c = g.getopt()) != -1 ) {
+            switch(c) {
+                case 'c':
+                    config_file = g.getOptarg();
+                    break;
+            }
+        }
+
+        if (g.getOptind() == args.length || config_file == null) {
+            System.err.println("Usage: " + SearcherDemo.class.getCanonicalName() + " -c config.file QUERY");
             System.exit(64);
         }
 
-        String directory = args[0];
-        SearcherDemo searcher = new SearcherDemo(new IndexingConfig(directory));
+        SearcherDemo searcher = new SearcherDemo(new IndexingConfig(config_file));
 
         try {
-            searcher.PerformRequest(args[1]);
+            String request = args[g.getOptind()];
+            searcher.PerformRequest(request);
         } catch (ParseException e) {
             System.err.println("Exception while parsing query: "+ e);
         }

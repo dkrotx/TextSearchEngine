@@ -1,6 +1,6 @@
 package org.bytesoft.tsengine;
 
-import org.bytesoft.tsengine.encoders.Simple9Encoder;
+import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 
 import java.io.DataOutputStream;
@@ -15,8 +15,13 @@ import java.util.Map;
 public class WordIndexer {
     HashMap<Long, IdxBlockEncoder> words_buf = new HashMap<>();
     final int SIZE_WORD_ENTRY = 16;
+    EncodersFactory encoder_factory;
 
     long acc_size = 0;
+
+    public WordIndexer(EncodersFactory encoder_factory) {
+        this.encoder_factory = encoder_factory;
+    }
 
     private void addDocIDToEncoder(IdxBlockEncoder enc, int id)
     {
@@ -34,7 +39,7 @@ public class WordIndexer {
         IdxBlockEncoder comp = words_buf.get(hash);
 
         if (comp == null) {
-            comp = new IdxBlockEncoder(new Simple9Encoder());
+            comp = new IdxBlockEncoder(encoder_factory.MakeEncoder());
             words_buf.put(hash, comp);
             acc_size += SIZE_WORD_ENTRY;
         }

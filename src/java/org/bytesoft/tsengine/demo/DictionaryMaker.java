@@ -1,5 +1,7 @@
 package org.bytesoft.tsengine.demo;
 
+import gnu.getopt.Getopt;
+import org.bytesoft.tsengine.IndexingConfig;
 import org.bytesoft.tsengine.dict.DictRecord;
 import org.bytesoft.tsengine.dict.DictionaryWriter;
 
@@ -20,19 +22,20 @@ class DictionaryMaker {
     private Path src_catalog_path;
     private Path dictionary_path;
     private DictionaryWriter dictionary;
+    private IndexingConfig cfg;
 
     private int estimateNumberOfEntries(Path raw_catalog) throws IOException {
         return (int)(Files.size(raw_catalog) / DICTIONARY_RECORD_SIZE);
     }
 
     public void writeDictionary() throws IOException {
-        try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(dictionary_path))) {
+        try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(cfg.GetRindexDictPath()))) {
             dictionary.Write(out);
         }
     }
 
     public void CreateDictionary() throws IOException {
-        try (DataInputStream idx = new DataInputStream(Files.newInputStream(src_catalog_path))) {
+        try (DataInputStream idx = new DataInputStream(Files.newInputStream(cfg.GetRindexCatPath()))) {
             try {
                 int offset = 0;
 
@@ -48,20 +51,30 @@ class DictionaryMaker {
         }
     }
 
-    public DictionaryMaker(String index_directory) throws IOException {
-        src_catalog_path = Paths.get(index_directory, "rindex.cat");
-        dictionary_path = Paths.get(index_directory, "rindex.dic");
-
-        dictionary = new DictionaryWriter(estimateNumberOfEntries(src_catalog_path));
+    public DictionaryMaker(String config_file) throws IOException, IndexingConfig.BadConfigFormat {
+        cfg = new IndexingConfig(config_file);
+        dictionary = new DictionaryWriter(estimateNumberOfEntries(cfg.GetRindexCatPath()));
     }
 
-    public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.err.println("Usage: " + HtmlIndexerDemo.class.getCanonicalName() + " path/to/rindex");
+    public static void main(String[] args) throws IOException, IndexingConfig.BadConfigFormat {
+        Getopt g = new Getopt("DictionaryMaker", args, "c:");
+        int c;
+        String config_file = null;
+
+        while( (c = g.getopt()) != -1 ) {
+            switch(c) {
+                case 'c':
+                    config_file = g.getOptarg();
+                    break;
+            }
+        }
+
+        if (config_file == null || g.getOptind() != args.length) {
+            System.err.println("Usage: " + DictionaryMaker.class.getCanonicalName() + " -c config.file");
             System.exit(64);
         }
 
-        DictionaryMaker dm = new DictionaryMaker(args[0]);
+        DictionaryMaker dm = new DictionaryMaker(config_file);
         dm.CreateDictionary();
         dm.writeDictionary();
     }

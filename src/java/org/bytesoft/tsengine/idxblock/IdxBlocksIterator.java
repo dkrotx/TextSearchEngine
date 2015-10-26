@@ -1,5 +1,7 @@
 package org.bytesoft.tsengine.idxblock;
 
+import org.bytesoft.tsengine.encoders.EncodersFactory;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -26,11 +28,11 @@ public class IdxBlocksIterator {
      * Create block iterator from given ByteBuffer areas.
      * @param areas distinct index blocks to decode
      */
-    public IdxBlocksIterator(ByteBuffer[] areas) {
+    public IdxBlocksIterator(ByteBuffer[] areas, EncodersFactory decoder_factory) {
         blocks = new IdxBlockDecoder[areas.length];
 
         for (int i = 0; i < areas.length; i++) {
-            blocks[i] = new IdxBlockDecoder(areas[i]);
+            blocks[i] = new IdxBlockDecoder(areas[i], decoder_factory);
             docs_total += blocks[i].GetDocsAmount();
         }
     }

@@ -20,5 +20,6 @@
     <orderEntry type="library" exported="" name="boilerpipe-1.2.0" level="project" />
     <orderEntry type="library" name="lemmatizer_native" level="project" />
     <orderEntry type="library" exported="" name="gnu-getopt" level="application" />
+    <orderEntry type="library" name="com.googlecode.json-simple:json-simple:1.1.1" level="project" />
   </component>
 </module>

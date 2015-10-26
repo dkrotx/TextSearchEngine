@@ -2,6 +2,8 @@ package org.bytesoft.tsengine;
 
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import de.l3s.boilerpipe.extractors.DefaultExtractor;
+import org.bytesoft.tsengine.encoders.EncodersFactory;
+import org.bytesoft.tsengine.info.IndexInfoWriter;
 import org.bytesoft.tsengine.text.TextTokenizer;
 import org.bytesoft.tsengine.urls.UrlsCollectionWriter;
 
@@ -15,7 +17,7 @@ import java.util.HashSet;
  * HTML document indexer
  */
 public class HtmlDocIndexer {
-    private WordIndexer widx = new WordIndexer();
+    private WordIndexer word_indexer;
     private int doc_id = -1;
     private IndexingConfig cfg;
 
@@ -53,6 +55,10 @@ public class HtmlDocIndexer {
     public HtmlDocIndexer(IndexingConfig cfg) throws IOException {
         this.cfg = cfg;
 
+        EncodersFactory enc_factory = new EncodersFactory();
+        enc_factory.SetCurrentEncoder(cfg.GetEncodingMethod());
+
+        word_indexer = new WordIndexer(enc_factory);
         rindex_writer = new DataOutputStream(new FileOutputStream(cfg.GetRindexPath().toFile()));
         catalog_writer = new DataOutputStream(new FileOutputStream(cfg.GetRindexCatPath().toFile()));
         urls_writer = this.new UrlsWriter();
@@ -68,16 +74,16 @@ public class HtmlDocIndexer {
 
         doc_id++;
         for (String w: uniq_words) {
-            widx.AddWord(w, doc_id);
+            word_indexer.AddWord(w, doc_id);
         }
     }
 
     public long GetApproximateSize() {
-        return widx.GetApproximateSize();
+        return word_indexer.GetApproximateSize();
     }
 
     public void Flush() throws IOException {
-        widx.WriteAndFlush(rindex_writer, catalog_writer);
+        word_indexer.WriteAndFlush(rindex_writer, catalog_writer);
         urls_writer.Flush();
 
         rindex_writer.flush();
@@ -103,5 +109,12 @@ public class HtmlDocIndexer {
             System.out.println("Flush");
             Flush();
         }
+    }
+
+    public void WriteIndexInfo() throws IOException {
+        IndexInfoWriter info = new IndexInfoWriter(cfg);
+
+        info.SetNumberOfDocs(doc_id+1);
+        info.Write();
     }
 }

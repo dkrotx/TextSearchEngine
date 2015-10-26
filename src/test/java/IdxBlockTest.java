@@ -1,3 +1,4 @@
+import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.encoders.VarByteEncoder;
 import org.bytesoft.tsengine.idxblock.IdxBlockDecoder;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
@@ -15,12 +16,19 @@ import static org.junit.Assert.*;
  * Test if IdxBlockEncoder/Decoder and Iterator
  */
 public class IdxBlockTest {
+
+    static EncodersFactory factory = new EncodersFactory();
+
+    static {
+        factory.SetCurrentDecoder(EncodersFactory.EncodingMethods.VAR_BYTE);
+    }
+
     @Test
     public void TestIndexBlock() throws Exception {
         IdxBlockEncoder enc = new IdxBlockEncoder(new VarByteEncoder());
         int[] postings = new int[] { 1, 55, 3733, 4000 };
 
-        IdxBlockDecoder dec = new IdxBlockDecoder( IdxBlockUtils.makeIndexBlock(postings) );
+        IdxBlockDecoder dec = new IdxBlockDecoder( IdxBlockUtils.makeIndexBlock(postings), factory );
         assertEquals(postings.length, dec.GetDocsAmount());
 
         int[] decoded  = new int[postings.length];
@@ -64,7 +72,7 @@ public class IdxBlockTest {
         }
 
         // walk through index blocks via iterator
-        IdxBlocksIterator it = new IdxBlocksIterator(bufs);
+        IdxBlocksIterator it = new IdxBlocksIterator(bufs, factory);
         assertEquals(all_postings.size(), it.GetDocsAmount());
         assertEquals(IdxBlocksIterator.ALPHA_ID, it.GetCurrentDocID());
 
@@ -97,7 +105,7 @@ public class IdxBlockTest {
         IdxBlocksIterator it = new IdxBlocksIterator(new ByteBuffer[] {
                 IdxBlockUtils.makeIndexBlockV(1, 3, 5, 7, 8, 9),
                 IdxBlockUtils.makeIndexBlockV(10)
-        });
+        }, factory);
 
         assertEquals("0 does not exists, but 1 OK", 1, it.GotoDocID(0));
         assertEquals(5, it.GotoDocID(5));
@@ -120,7 +128,7 @@ public class IdxBlockTest {
                 IdxBlockUtils.makeIndexBlockV(1, 3, 5, 7),
                 IdxBlockUtils.makeIndexBlockV(10, 11),
                 IdxBlockUtils.makeIndexBlockV(55, 70),
-        });
+        }, factory);
 
         assertEquals("100 is greater than any", IdxBlocksIterator.OMEGA_ID, it.GotoDocID(100));
 
@@ -133,7 +141,7 @@ public class IdxBlockTest {
         IdxBlocksIterator it = new IdxBlocksIterator(new ByteBuffer[] {
                 IdxBlockUtils.makeIndexBlockV(1, 3, 5, 7),
                 IdxBlockUtils.makeIndexBlockV(10, 11)
-        });
+        }, factory);
 
         assertEquals("Going to OMEGA_ID should be OK",
                 IdxBlocksIterator.OMEGA_ID, it.GotoDocID(IdxBlocksIterator.OMEGA_ID));
