@@ -77,6 +77,6 @@ public class EliasGammaEncoder implements IntCompressor {
     }
 
     public boolean CanEncodeZero() {
-        return true;
+        return false;
     }
 }

@@ -20,7 +20,7 @@ public class IdxBlockTest {
     static EncodersFactory factory = new EncodersFactory();
 
     static {
-        factory.SetCurrentDecoder(EncodersFactory.EncodingMethods.VAR_BYTE);
+        factory.SetCurrentDecoder(EncodersFactory.EncodingMethods.ELIAS_GAMMA);
     }
 
     @Test

@@ -1,5 +1,4 @@
-import org.bytesoft.tsengine.encoders.IntCompressor;
-import org.bytesoft.tsengine.encoders.VarByteEncoder;
+import org.bytesoft.tsengine.encoders.*;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 
 import java.io.ByteArrayOutputStream;
@@ -12,7 +11,7 @@ import java.nio.ByteBuffer;
  */
 public class IdxBlockUtils {
     static public ByteBuffer makeIndexBlock(int[] postings) throws IntCompressor.TooLargeToCompressException, IOException {
-        IdxBlockEncoder enc = new IdxBlockEncoder(new VarByteEncoder());
+        IdxBlockEncoder enc = new IdxBlockEncoder(new EliasGammaEncoder());
 
         for(int id: postings) {
             enc.AddDocID(id);

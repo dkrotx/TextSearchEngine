@@ -40,7 +40,7 @@ public class QTreePerformerTest {
                 bufs_copy[i] = bufs_orig.get(i).slice();
 
             EncodersFactory factory = new EncodersFactory();
-            factory.SetCurrentDecoder(EncodersFactory.EncodingMethods.VAR_BYTE);
+            factory.SetCurrentDecoder(EncodersFactory.EncodingMethods.ELIAS_GAMMA);
 
             return new IdxBlocksIterator(bufs_copy, factory);
         }
