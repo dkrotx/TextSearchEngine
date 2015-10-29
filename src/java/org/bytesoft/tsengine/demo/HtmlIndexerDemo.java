@@ -3,7 +3,7 @@ package org.bytesoft.tsengine.demo;
 import gnu.getopt.Getopt;
 import org.bytesoft.tsengine.HtmlDocIndexer;
 import org.bytesoft.tsengine.IndexingConfig;
-import org.bytesoft.tsengine.info.IndexInfoWriter;
+import org.bytesoft.document.PlainDocumentExchange.PlainDocument;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.zip.DataFormatException;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 
 /**
@@ -74,21 +75,38 @@ class HtmlIndexerDemo {
         }
     }
 
+    public void IdxPackedPlainText(String path) throws
+        IOException
+    {
+        try(GZIPInputStream in = new GZIPInputStream(new FileInputStream(path))) {
+            for(;;) {
+                PlainDocument doc = PlainDocument.parseDelimitedFrom(in);
+                if (doc == null)
+                    break;
+
+                idx.AddPlainTextDocument(doc.getUrl(), doc.getContent().toStringUtf8());
+            }
+        }
+    }
+
     public void Flush() throws IOException {
         idx.Flush();
-        idx.WriteIndexInfo();
     }
 
     public static void main(String[] args) throws Exception {
-        Getopt g = new Getopt("HtmlIndexerDemo", args, "c:p");
+        Getopt g = new Getopt("HtmlIndexerDemo", args, "c:pt");
         int c;
         boolean packed_input = false;
+        boolean text_input = false;
         String config_file = null;
 
         while( (c = g.getopt()) != -1 ) {
             switch(c) {
                 case 'c':
                     config_file = g.getOptarg();
+                    break;
+                case 't':
+                    text_input = true;
                     break;
                 case 'p':
                     packed_input = true;
@@ -113,6 +131,8 @@ class HtmlIndexerDemo {
         for(int i = g.getOptind(); i < args.length; i++) {
             if (packed_input) {
                 demo.IdxPackedFile(args[i]);
+            } else if (text_input) {
+                demo.IdxPackedPlainText(args[i]);
             } else {
                 try {
                     demo.ParseOneMoreFile(args[i]);

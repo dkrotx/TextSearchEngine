@@ -13,7 +13,7 @@ public class TextTokenizerTest {
             assertEquals(t, tok.getNextToken());
         }
 
-        assertFalse(tok.hasNextToken());
+        assertFalse("Tokes must be finished", tok.hasNextToken());
     }
 
     private void compareTokensV(String text, String ... expected_tokens) {
@@ -39,5 +39,11 @@ public class TextTokenizerTest {
 
         compareTokensV("Perhaps (или нет?): какие-то ёжики уснут(зимой)",
                 "Perhaps", "или", "нет", "какие", "то", "ёжики", "уснут", "зимой");
+    }
+
+    @Test
+    public void SkipNumbers() {
+        compareTokensV("this word is trash123 because nu3333mbers",
+                "this", "word", "is", "trash", "because", "nu", "mbers");
     }
 }

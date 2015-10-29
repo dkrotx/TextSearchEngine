@@ -23,6 +23,8 @@ public class IndexingConfig {
     private Path urls_idx_path;
     private Path info_path;
 
+    int lem_cache_capacity = 100000;
+
     // indexing config
     private EncodersFactory.EncodingMethods encoder;
     private long max_membuf;
@@ -65,6 +67,8 @@ public class IndexingConfig {
         max_membuf = (Long)getNecessaryField(idx_section, "mem_size_mb");
         max_membuf *= (1 << 20);
 
+        lem_cache_capacity = ((Long)idx_section.getOrDefault("lem_cache_capacity", new Long(lem_cache_capacity))).intValue();
+
         String encoder_name = (String)getNecessaryField(idx_section, "encoder");
         encoder = EncodersFactory.GetEncoderByName(encoder_name);
         if (encoder == null)
@@ -95,5 +99,9 @@ public class IndexingConfig {
 
     public EncodersFactory.EncodingMethods GetEncodingMethod() {
         return encoder;
+    }
+
+    public int GetLemCacheCapacity() {
+        return lem_cache_capacity;
     }
 }

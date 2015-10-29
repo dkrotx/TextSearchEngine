@@ -25,6 +25,7 @@ public class HtmlDocIndexer {
     private DataOutputStream catalog_writer;
     private UrlsWriter urls_writer;
     private TextTokenizer text_tokenizer = new TextTokenizer();
+    private LemmatizerCache lem_cache;
 
     private class UrlsWriter {
         UrlsCollectionWriter writer;
@@ -62,14 +63,16 @@ public class HtmlDocIndexer {
         rindex_writer = new DataOutputStream(new FileOutputStream(cfg.GetRindexPath().toFile()));
         catalog_writer = new DataOutputStream(new FileOutputStream(cfg.GetRindexCatPath().toFile()));
         urls_writer = this.new UrlsWriter();
+        lem_cache = new LemmatizerCache(cfg.GetLemCacheCapacity());
     }
 
-    public void AddDocumentWords() {
+    private void addDocumentWords() {
         HashSet<String> uniq_words = new HashSet<>();
 
         while(text_tokenizer.hasNextToken()) {
             String word = text_tokenizer.getNextToken();
-            uniq_words.add(WordUtils.GetWordFirstForm(word));
+            if (word.length() > 1)
+                uniq_words.add(lem_cache.GetFirstForm(WordUtils.NormalizeWord(word)));
         }
 
         doc_id++;
@@ -82,28 +85,19 @@ public class HtmlDocIndexer {
         return word_indexer.GetApproximateSize();
     }
 
-    public void Flush() throws IOException {
-        word_indexer.WriteAndFlush(rindex_writer, catalog_writer);
-        urls_writer.Flush();
-
-        rindex_writer.flush();
-        catalog_writer.flush();
-    }
-
-    public void AddText(String text) {
-        text_tokenizer.TokenizeText(text);
-        AddDocumentWords();
-    }
-
     public void AddDocument(String url, String html) throws HTMLParsingError, IOException {
         try {
             String text = DefaultExtractor.getInstance().getText(html);
-            AddText(text);
-            urls_writer.Put(url);
+            AddPlainTextDocument(url, text);
         }
         catch (BoilerpipeProcessingException e) {
             throw new HTMLParsingError("Failed to parse HTML document" + e.getMessage());
         }
+    }
+
+    public void AddPlainTextDocument(String url, String text) throws IOException {
+        addText(text);
+        urls_writer.Put(url);
 
         if (GetApproximateSize() >= cfg.GetMaxMemBuf()) {
             System.out.println("Flush");
@@ -111,7 +105,22 @@ public class HtmlDocIndexer {
         }
     }
 
-    public void WriteIndexInfo() throws IOException {
+    private void addText(String text) {
+        text_tokenizer.TokenizeText(text);
+        addDocumentWords();
+    }
+
+    public void Flush() throws IOException {
+        word_indexer.WriteAndFlush(rindex_writer, catalog_writer);
+        urls_writer.Flush();
+
+        rindex_writer.flush();
+        catalog_writer.flush();
+
+        writeIndexInfo();
+    }
+
+    private void writeIndexInfo() throws IOException {
         IndexInfoWriter info = new IndexInfoWriter(cfg);
 
         info.SetNumberOfDocs(doc_id+1);

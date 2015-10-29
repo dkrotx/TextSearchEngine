@@ -1,0 +1,9 @@
+package org.bytesoft.document;
+
+option java_outer_classname = "PlainDocumentExchange";
+
+message PlainDocument {
+    required string url = 1;
+    required uint64 download_time = 2;   // UNIX time in seconds
+    optional bytes content = 3;
+}

@@ -21,5 +21,6 @@
     <orderEntry type="library" name="lemmatizer_native" level="project" />
     <orderEntry type="library" exported="" name="gnu-getopt" level="application" />
     <orderEntry type="library" name="com.googlecode.json-simple:json-simple:1.1.1" level="project" />
+    <orderEntry type="library" name="com.google.protobuf:protobuf-java:2.6.1" level="application" />
   </component>
 </module>
