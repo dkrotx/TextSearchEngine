@@ -2,26 +2,51 @@ package org.bytesoft.tsengine.demo;
 
 import gnu.getopt.Getopt;
 import org.bytesoft.tsengine.IndexingConfig;
+import org.bytesoft.tsengine.dict.CatalogReader;
+import org.bytesoft.tsengine.dict.CatalogRecord;
 import org.bytesoft.tsengine.dict.DictRecord;
 import org.bytesoft.tsengine.dict.DictionaryWriter;
+import util.lang.ExceptionalIterator;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 /**
  * Build dictionary for given inverted index.
  */
 class DictionaryMaker {
-
-    // catalog record is: (word-hash, offset)
-    private static final int CATALOG_RECORD_SIZE = (Long.SIZE + Integer.SIZE)/Byte.SIZE;
-    private DictionaryWriter dictionary;
     private IndexingConfig cfg;
+    private CatalogReader catalog;
+    private DictionaryWriter dictionary;
 
     public DictionaryMaker(String config_file) throws IOException, IndexingConfig.BadConfigFormat {
         cfg = new IndexingConfig(config_file);
-        dictionary = new DictionaryWriter(estimateNumberOfEntries(cfg.GetRindexCatPath()));
+        catalog = new CatalogReader(cfg.GetRindexCatPath());
+        dictionary = new DictionaryWriter(catalog.numberOfEntries());
+    }
+
+    public void CreateDictionary() throws IOException {
+        fillDictionary();
+        writeDictionary();
+    }
+
+    private void fillDictionary() throws IOException {
+        try (ExceptionalIterator<CatalogRecord, IOException> it = catalog.iterator()) {
+            int offset = 0;
+
+            while (it.hasNext()) {
+                CatalogRecord record = it.next();
+                dictionary.Add(record.word_hash, new DictRecord(offset, record.size));
+                offset += record.size;
+            }
+        }
+    }
+
+    private void writeDictionary() throws IOException {
+        try (DataOutputStream out = new DataOutputStream(
+                new BufferedOutputStream(Files.newOutputStream(cfg.GetRindexDictPath())))) {
+            dictionary.Write(out);
+        }
     }
 
     public static void main(String[] args) throws IOException, IndexingConfig.BadConfigFormat {
@@ -44,36 +69,5 @@ class DictionaryMaker {
 
         DictionaryMaker dm = new DictionaryMaker(config_file);
         dm.CreateDictionary();
-    }
-
-    private int estimateNumberOfEntries(Path raw_catalog) throws IOException {
-        return (int)(Files.size(raw_catalog) / CATALOG_RECORD_SIZE);
-    }
-
-    private void writeDictionary() throws IOException {
-        try (DataOutputStream out = new DataOutputStream(
-                new BufferedOutputStream(Files.newOutputStream(cfg.GetRindexDictPath())))) {
-            dictionary.Write(out);
-        }
-    }
-
-    public void CreateDictionary() throws IOException {
-        try (DataInputStream idx = new DataInputStream(
-                new BufferedInputStream(Files.newInputStream(cfg.GetRindexCatPath())))) {
-            try {
-                int offset = 0;
-
-                for(;;) {
-                    long word_hash = idx.readLong();
-                    int block_size = idx.readInt();
-
-                    dictionary.Add(word_hash, new DictRecord(offset, block_size));
-                    offset += block_size;
-                }
-            }
-            catch(EOFException e) {}
-        }
-
-        writeDictionary();
     }
 }

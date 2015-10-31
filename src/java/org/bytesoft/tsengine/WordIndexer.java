@@ -1,5 +1,7 @@
 package org.bytesoft.tsengine;
 
+import org.bytesoft.tsengine.dict.CatalogRecord;
+import org.bytesoft.tsengine.dict.CatalogWriter;
 import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 
@@ -55,18 +57,13 @@ public class WordIndexer {
     /**
      * Flush encoded content in given stream
      *
-     * @param rindex reverse index file
-     * @param catalog file to store word hashes and rindex-records size
+     * @param writer reverse index writer
      */
-    public void WriteAndFlush(DataOutputStream rindex, DataOutputStream catalog) throws IOException {
+    public void flushBuffered(IdxBlockWriter writer) throws IOException {
         for(Map.Entry<Long, IdxBlockEncoder> entry: words_buf.entrySet()) {
-            IdxBlockEncoder enc = entry.getValue();
-
-            int size = (int)enc.Write(rindex);
-
-            catalog.writeLong(entry.getKey());
-            catalog.writeInt(size);
+            writer.write(entry.getKey(), entry.getValue());
         }
+
         words_buf.clear();
         acc_size = 0;
     }

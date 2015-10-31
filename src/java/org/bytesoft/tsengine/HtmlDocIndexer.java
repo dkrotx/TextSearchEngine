@@ -2,6 +2,7 @@ package org.bytesoft.tsengine;
 
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import de.l3s.boilerpipe.extractors.DefaultExtractor;
+import org.bytesoft.tsengine.dict.CatalogWriter;
 import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.info.IndexInfoWriter;
 import org.bytesoft.tsengine.text.TextTokenizer;
@@ -18,8 +19,8 @@ public class HtmlDocIndexer {
     private int doc_id = -1;
     private IndexingConfig cfg;
 
-    private DataOutputStream rindex_writer;
-    private DataOutputStream catalog_writer;
+    private IdxBlockWriter index_writer;
+
     private UrlsWriter urls_writer;
     private TextTokenizer text_tokenizer = new TextTokenizer();
     private LemmatizerCache lem_cache;
@@ -57,8 +58,7 @@ public class HtmlDocIndexer {
         enc_factory.SetCurrentEncoder(cfg.GetEncodingMethod());
 
         word_indexer = new WordIndexer(enc_factory);
-        rindex_writer = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cfg.GetRindexPath().toFile())));
-        catalog_writer = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cfg.GetRindexCatPath().toFile())));
+        index_writer = new IdxBlockWriter(cfg.GetRindexPath(), cfg.GetRindexCatPath());
         urls_writer = this.new UrlsWriter();
         lem_cache = new LemmatizerCache(cfg.GetLemCacheCapacity());
     }
@@ -108,11 +108,10 @@ public class HtmlDocIndexer {
     }
 
     public void Flush() throws IOException {
-        word_indexer.WriteAndFlush(rindex_writer, catalog_writer);
+        word_indexer.flushBuffered(index_writer);
         urls_writer.Flush();
 
-        rindex_writer.flush();
-        catalog_writer.flush();
+        index_writer.flush();
 
         writeIndexInfo();
     }

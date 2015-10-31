@@ -42,6 +42,22 @@ public class EncodersFactory {
         decoder = d;
     }
 
+    public EncodingMethods GetCurrentEncoder() {
+        return encoder;
+    }
+
+    public EncodingMethods GetCurrentDecoder() {
+        return decoder;
+    }
+
+    public String GetCurrentEncoderName() {
+        return GetEncoderNameByID(GetCurrentEncoder());
+    }
+
+    public String GetCurrentDecoderName() {
+        return GetEncoderNameByID(GetCurrentDecoder());
+    }
+
     public IntCompressor MakeEncoder() {
         switch(encoder) {
             case VAR_BYTE: return new VarByteEncoder();
