@@ -14,7 +14,8 @@ public class UrlsCollectionReader {
         final int n = (int)(urls_idx_path.length() / (Integer.SIZE / Byte.SIZE));
         offsets = new int[n];
 
-        try (DataInputStream idx_stream = new DataInputStream(new FileInputStream(urls_idx_path))) {
+        try (DataInputStream idx_stream = new DataInputStream(
+                new BufferedInputStream(new FileInputStream(urls_idx_path)))) {
             for (int i = 0; i < n; i++)
                 offsets[i] = idx_stream.readInt();
         }

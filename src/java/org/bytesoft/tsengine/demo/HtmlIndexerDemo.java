@@ -78,7 +78,7 @@ class HtmlIndexerDemo {
     public void IdxPackedPlainText(String path) throws
         IOException
     {
-        try(GZIPInputStream in = new GZIPInputStream(new FileInputStream(path))) {
+        try(GZIPInputStream in = new GZIPInputStream(new BufferedInputStream(new FileInputStream(path)))) {
             for(;;) {
                 PlainDocument doc = PlainDocument.parseDelimitedFrom(in);
                 if (doc == null)

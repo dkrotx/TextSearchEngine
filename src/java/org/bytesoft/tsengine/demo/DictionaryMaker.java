@@ -5,51 +5,19 @@ import org.bytesoft.tsengine.IndexingConfig;
 import org.bytesoft.tsengine.dict.DictRecord;
 import org.bytesoft.tsengine.dict.DictionaryWriter;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Build dictionary for given inverted index.
  */
 class DictionaryMaker {
 
-    private static final int DICTIONARY_RECORD_SIZE = 8 + 4;
-    private Path src_catalog_path;
-    private Path dictionary_path;
+    // catalog record is: (word-hash, offset)
+    private static final int CATALOG_RECORD_SIZE = (Long.SIZE + Integer.SIZE)/Byte.SIZE;
     private DictionaryWriter dictionary;
     private IndexingConfig cfg;
-
-    private int estimateNumberOfEntries(Path raw_catalog) throws IOException {
-        return (int)(Files.size(raw_catalog) / DICTIONARY_RECORD_SIZE);
-    }
-
-    public void writeDictionary() throws IOException {
-        try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(cfg.GetRindexDictPath()))) {
-            dictionary.Write(out);
-        }
-    }
-
-    public void CreateDictionary() throws IOException {
-        try (DataInputStream idx = new DataInputStream(Files.newInputStream(cfg.GetRindexCatPath()))) {
-            try {
-                int offset = 0;
-
-                for(;;) {
-                    long word_hash = idx.readLong();
-                    int block_size = idx.readInt();
-
-                    dictionary.Add(word_hash, new DictRecord(offset, block_size));
-                    offset += block_size;
-                }
-            }
-            catch(EOFException e) {}
-        }
-    }
 
     public DictionaryMaker(String config_file) throws IOException, IndexingConfig.BadConfigFormat {
         cfg = new IndexingConfig(config_file);
@@ -76,6 +44,36 @@ class DictionaryMaker {
 
         DictionaryMaker dm = new DictionaryMaker(config_file);
         dm.CreateDictionary();
-        dm.writeDictionary();
+    }
+
+    private int estimateNumberOfEntries(Path raw_catalog) throws IOException {
+        return (int)(Files.size(raw_catalog) / CATALOG_RECORD_SIZE);
+    }
+
+    private void writeDictionary() throws IOException {
+        try (DataOutputStream out = new DataOutputStream(
+                new BufferedOutputStream(Files.newOutputStream(cfg.GetRindexDictPath())))) {
+            dictionary.Write(out);
+        }
+    }
+
+    public void CreateDictionary() throws IOException {
+        try (DataInputStream idx = new DataInputStream(
+                new BufferedInputStream(Files.newInputStream(cfg.GetRindexCatPath())))) {
+            try {
+                int offset = 0;
+
+                for(;;) {
+                    long word_hash = idx.readLong();
+                    int block_size = idx.readInt();
+
+                    dictionary.Add(word_hash, new DictRecord(offset, block_size));
+                    offset += block_size;
+                }
+            }
+            catch(EOFException e) {}
+        }
+
+        writeDictionary();
     }
 }

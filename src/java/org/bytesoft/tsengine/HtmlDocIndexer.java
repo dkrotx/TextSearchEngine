@@ -7,10 +7,7 @@ import org.bytesoft.tsengine.info.IndexInfoWriter;
 import org.bytesoft.tsengine.text.TextTokenizer;
 import org.bytesoft.tsengine.urls.UrlsCollectionWriter;
 
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.HashSet;
 
 /**
@@ -33,8 +30,8 @@ public class HtmlDocIndexer {
         DataOutputStream url_idx_stream;
 
         public UrlsWriter() throws IOException {
-            url_stream = new OutputStreamWriter(new FileOutputStream(cfg.GetUrlsPath().toFile()));
-            url_idx_stream = new DataOutputStream(new FileOutputStream(cfg.GetUrlsIdxPath().toFile()));
+            url_stream = new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(cfg.GetUrlsPath().toFile())));
+            url_idx_stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cfg.GetUrlsIdxPath().toFile())));
             writer = new UrlsCollectionWriter(url_stream, url_idx_stream);
         }
 
@@ -60,8 +57,8 @@ public class HtmlDocIndexer {
         enc_factory.SetCurrentEncoder(cfg.GetEncodingMethod());
 
         word_indexer = new WordIndexer(enc_factory);
-        rindex_writer = new DataOutputStream(new FileOutputStream(cfg.GetRindexPath().toFile()));
-        catalog_writer = new DataOutputStream(new FileOutputStream(cfg.GetRindexCatPath().toFile()));
+        rindex_writer = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cfg.GetRindexPath().toFile())));
+        catalog_writer = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cfg.GetRindexCatPath().toFile())));
         urls_writer = this.new UrlsWriter();
         lem_cache = new LemmatizerCache(cfg.GetLemCacheCapacity());
     }
