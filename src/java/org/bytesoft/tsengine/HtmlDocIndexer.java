@@ -2,7 +2,6 @@ package org.bytesoft.tsengine;
 
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import de.l3s.boilerpipe.extractors.DefaultExtractor;
-import org.bytesoft.tsengine.dict.CatalogWriter;
 import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.info.IndexInfoWriter;
 import org.bytesoft.tsengine.text.TextTokenizer;

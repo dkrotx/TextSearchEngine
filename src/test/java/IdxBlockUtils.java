@@ -1,4 +1,5 @@
-import org.bytesoft.tsengine.encoders.*;
+import org.bytesoft.tsengine.encoders.EliasGammaEncoder;
+import org.bytesoft.tsengine.encoders.IntCompressor;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 
 import java.io.ByteArrayOutputStream;

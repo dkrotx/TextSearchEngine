@@ -1,9 +1,9 @@
 package org.bytesoft.tsengine.demo;
 
 import gnu.getopt.Getopt;
+import org.bytesoft.document.PlainDocumentExchange.PlainDocument;
 import org.bytesoft.tsengine.HtmlDocIndexer;
 import org.bytesoft.tsengine.IndexingConfig;
-import org.bytesoft.document.PlainDocumentExchange.PlainDocument;
 
 import java.io.*;
 import java.nio.file.Files;

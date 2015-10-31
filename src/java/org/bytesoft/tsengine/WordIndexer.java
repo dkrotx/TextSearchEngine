@@ -1,11 +1,8 @@
 package org.bytesoft.tsengine;
 
-import org.bytesoft.tsengine.dict.CatalogRecord;
-import org.bytesoft.tsengine.dict.CatalogWriter;
 import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

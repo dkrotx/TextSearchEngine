@@ -4,7 +4,8 @@ import org.bytesoft.tsengine.IndexingConfig;
 import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.json.simple.JSONObject;
 
-import java.io.*;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * Write information-file about index

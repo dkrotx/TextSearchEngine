@@ -1,8 +1,7 @@
 import org.bytesoft.tsengine.encoders.FibonacciDecoder;
 import org.bytesoft.tsengine.encoders.FibonacciEncoder;
-
 import org.bytesoft.tsengine.encoders.IntCompressor;
-import org.junit.*;
+import org.junit.Test;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
