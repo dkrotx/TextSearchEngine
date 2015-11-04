@@ -33,5 +33,10 @@ public class FibonacciDecoder implements IntDecompressor {
     }
 
     @Override
+    public void Position(int new_position) {
+        bitbuf.position(new_position);
+    }
+
+    @Override
     public boolean CanDecodeZero() { return false; }
 }

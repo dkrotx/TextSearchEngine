@@ -17,12 +17,13 @@ public class IdxBlockDecoder {
     private int ndocs = -1;
     private int cur_docs_offset = 0;
     private int cur_docid = -1;
+    private JumpTableNavigator jump_table;
 
     public IdxBlockDecoder(ByteBuffer mem, EncodersFactory decoder_factory) {
         block_buf = mem;
         readHeader();
 
-        docid_decoder = decoder_factory.MakeDecoder(mem.slice());
+        docid_decoder = decoder_factory.MakeDecoder(block_buf.slice());
     }
 
     /**
@@ -88,5 +89,6 @@ public class IdxBlockDecoder {
 
     private void readHeader() {
         ndocs = VarByteDecoder.ExtractNumberFromBuf(block_buf);
+        jump_table = new JumpTableNavigator(block_buf);
     }
 }

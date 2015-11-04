@@ -39,5 +39,11 @@ public class Simple9Decoder implements IntDecompressor {
     }
 
     @Override
+    public void Position(int new_position) {
+        buf.position(new_position);
+        unpacked_size = 0;
+    }
+
+    @Override
     public boolean CanDecodeZero() { return true; }
 }

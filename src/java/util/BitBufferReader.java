@@ -23,6 +23,11 @@ public class BitBufferReader {
         return (cur_byte & (1 << cur_byte_offset++)) != 0;
     }
 
+    public void position(int new_position) {
+        buf.position(new_position);
+        cur_byte_offset = 8;
+    }
+
     public final boolean hasRemaining() {
         return cur_byte_offset < 8 || buf.hasRemaining();
     }

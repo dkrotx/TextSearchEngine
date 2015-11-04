@@ -15,8 +15,12 @@ public class IdxBlockEncoder {
     private int prev_doc_id = -1;
     private int ndocs = 0;
     private IntCompressor main_encoder;
+    private int continuous_elems = 0;
+    private int continuous_size = 0;
+    private JumpTableFillPolicy jt_policy = new JumpTableFillPolicy.Empty();
 
     private static final int MAX_HEADER_SIZE = 4;
+    private JumpTableBuilder jump_table = new JumpTableBuilder(new JumpTableFillPolicy.Empty());
 
     public IdxBlockEncoder(IntCompressor encoder) {
         main_encoder = encoder;
@@ -28,6 +32,17 @@ public class IdxBlockEncoder {
      * @throws IntCompressor.TooLargeToCompressException if id is too large or negative
      */
     public void AddDocID(int id) throws IntCompressor.TooLargeToCompressException {
+        try {
+            if (jt_policy.enough(continuous_elems, continuous_size)) {
+                jump_table.addEntry(id, main_encoder.GetStoreSize());
+                continuous_elems = 0;
+                continuous_size = 0;
+            }
+        }
+        catch(JumpTableBuilder.TooLargeBlockToJump e) {
+            throw new IntCompressor.TooLargeToCompressException(e.getMessage());
+        }
+
         if (ndocs == 0) {
             // Since not all encoders may encode zero, it's better to
             // encode +1 to first document
@@ -48,21 +63,28 @@ public class IdxBlockEncoder {
 
         prev_doc_id = id;
         ndocs++;
+        continuous_elems++;
     }
 
     private int writeHeader(DataOutputStream wr) throws IOException {
+        int size = 0;
+
         try {
             VarByteEncoder vb_enc = new VarByteEncoder();
             vb_enc.AddNumber(ndocs);
 
             wr.write(vb_enc.GetBytes());
-            return vb_enc.GetBytes().length;
+            size += vb_enc.GetBytes().length;
         }
         catch(IntCompressor.TooLargeToCompressException e) {
             IllegalStateException exception = new IllegalStateException("ndocs should be representable in VarByte");
             exception.addSuppressed(e);
             throw exception;
         }
+
+        size += jump_table.write(wr);
+
+        return size;
     }
 
     public long Write(DataOutputStream wr) throws IOException {

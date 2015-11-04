@@ -13,6 +13,11 @@ public class VarByteDecoder implements IntDecompressor {
     }
 
     @Override
+    public void Position(int new_position) {
+        buf.position(new_position);
+    }
+
+    @Override
     public int ExtractNumber() {
         return ExtractNumberFromBuf(buf);
     }

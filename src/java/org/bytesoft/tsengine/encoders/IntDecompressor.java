@@ -6,5 +6,6 @@ package org.bytesoft.tsengine.encoders;
  */
 public interface IntDecompressor {
     int ExtractNumber();
+    void Position(int new_position);
     boolean CanDecodeZero();
 }

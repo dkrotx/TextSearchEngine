@@ -11,7 +11,7 @@ public interface IntCompressor {
     boolean CanEncodeZero();
 
     class TooLargeToCompressException extends Exception {
-        TooLargeToCompressException(String msg) {
+        public TooLargeToCompressException(String msg) {
             super(msg);
         }
     }
