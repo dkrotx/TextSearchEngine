@@ -1,8 +1,4 @@
-index:
-- make Fibonnaci / Simple9 / Golomb encoding
-
 test:
-- index really huge dump
 - build index with Apache Spark
 -- launch on standalone version
 -- launch apache spark distributed (lxc)
@@ -11,9 +7,6 @@ test:
 - integrate logging on indexing process
 
 Bonus:
-- use jumptables to skip docposes
-- use lemmatizer
--- integrate lemmatizer via JNI
 - add synonyms
 - save entries, not only posting lists
 -- make extraction
