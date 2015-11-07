@@ -15,15 +15,18 @@ public class IdxBlockEncoder {
     private int prev_doc_id = -1;
     private int ndocs = 0;
     private IntCompressor main_encoder;
-    private int continuous_elems = 0;
-    private int continuous_size = 0;
-    private JumpTableFillPolicy jt_policy = new JumpTableFillPolicy.Empty();
+    private JumpTableConfig jump_table_cfg;
+    private JumpTableBuilder jump_table;
 
-    private static final int MAX_HEADER_SIZE = 4;
-    private JumpTableBuilder jump_table = new JumpTableBuilder(new JumpTableFillPolicy.Empty());
 
     public IdxBlockEncoder(IntCompressor encoder) {
+        this(encoder, JumpTableConfig.makeEmptyJumpTable());
+    }
+
+    public IdxBlockEncoder(IntCompressor encoder, JumpTableConfig jt_config) {
         main_encoder = encoder;
+        jump_table_cfg = jt_config;
+        jump_table = new JumpTableBuilder(jump_table_cfg);
     }
 
     /**
@@ -33,10 +36,9 @@ public class IdxBlockEncoder {
      */
     public void AddDocID(int id) throws IntCompressor.TooLargeToCompressException {
         try {
-            if (jt_policy.enough(continuous_elems, continuous_size)) {
-                jump_table.addEntry(id, main_encoder.GetStoreSize());
-                continuous_elems = 0;
-                continuous_size = 0;
+            if (ndocs != 0 && (ndocs % jump_table_cfg.rindex_step) == 0) {
+                main_encoder.flush();
+                jump_table.addEntry(id, ndocs, main_encoder.size());
             }
         }
         catch(JumpTableBuilder.TooLargeBlockToJump e) {
@@ -63,7 +65,6 @@ public class IdxBlockEncoder {
 
         prev_doc_id = id;
         ndocs++;
-        continuous_elems++;
     }
 
     private int writeHeader(DataOutputStream wr) throws IOException {
@@ -96,6 +97,6 @@ public class IdxBlockEncoder {
     }
 
     public long GetStoreSize() {
-        return main_encoder.GetStoreSize() + MAX_HEADER_SIZE;
+        return main_encoder.GetStoreSize() + 16 /* average overhead */;
     }
 }

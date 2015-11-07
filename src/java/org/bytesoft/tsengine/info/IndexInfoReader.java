@@ -2,6 +2,7 @@ package org.bytesoft.tsengine.info;
 
 import org.bytesoft.tsengine.IndexingConfig;
 import org.bytesoft.tsengine.encoders.EncodersFactory;
+import org.bytesoft.tsengine.idxblock.JumpTableConfig;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -17,6 +18,7 @@ public class IndexInfoReader {
 
     private int ndocs = 0;
     private EncodersFactory.EncodingMethods encoder;
+    private JumpTableConfig jt_config;
 
     public static class IndexInfoFormatError extends Exception {
         public IndexInfoFormatError(String msg) { super(msg); }
@@ -32,6 +34,10 @@ public class IndexInfoReader {
             encoder = EncodersFactory.GetEncoderByName(encoder_name);
             if (encoder == null)
                 throw new IndexInfoFormatError("Bad encoder \"" + encoder + "\"");
+
+            int jt_direct_step = ((Long)root.get("jt_direct")).intValue();
+            int jt_indirect_step = ((Long)root.get("jt_indirect")).intValue();
+            jt_config = new JumpTableConfig(jt_direct_step, jt_indirect_step);
         } catch(ParseException e) {
             throw new IndexInfoFormatError("failed to parse index info file: " + e);
         }
@@ -43,4 +49,5 @@ public class IndexInfoReader {
     public EncodersFactory.EncodingMethods GetEncodingMethod() {
         return encoder;
     }
+    public JumpTableConfig GetJumpTableConfig() { return jt_config; }
 }

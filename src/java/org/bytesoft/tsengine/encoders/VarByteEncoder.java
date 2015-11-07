@@ -41,7 +41,17 @@ public class VarByteEncoder implements IntCompressor {
         return bytes+1;
     }
 
-    public int GetStoreSize() { return storage.size();  }
+    @Override
+    public void flush() {
+        // always byte-aligned and flushed
+    }
+
+    @Override
+    public int size() {
+        return storage.size();
+    }
+
+
     public byte[]  GetBytes() { return storage.toByteArray(); }
 
     /**

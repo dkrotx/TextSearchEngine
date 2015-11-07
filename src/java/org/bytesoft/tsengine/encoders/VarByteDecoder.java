@@ -13,7 +13,7 @@ public class VarByteDecoder implements IntDecompressor {
     }
 
     @Override
-    public void Position(int new_position) {
+    public void position(int new_position) {
         buf.position(new_position);
     }
 
@@ -32,6 +32,11 @@ public class VarByteDecoder implements IntDecompressor {
         }
 
         return res;
+    }
+
+    @Override
+    public void align() {
+        // varbyte is always aligned
     }
 
     @Override

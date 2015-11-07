@@ -10,52 +10,80 @@ import java.util.ArrayList;
 /**
  * Build one or more jump table levels to quickly navigate in posting-list.
  * Final jump table structure is hierarchy of small jump tables. One above previous.
- * <p>
- * |posting-list-page||posting-list-page||posting-list-page|
- * |JT0||JT0|JT0|...
- * |JT1|
  */
 public class JumpTableBuilder {
-    ArrayList<WriterAndInfo> tables = new ArrayList<>();
-    JumpTableFillPolicy fill_policy;
+    ArrayList<JumpTableWriter> tables = new ArrayList<>();
+    JumpTableConfig table_config;
+    int entries_cnt = 0;
 
-    public JumpTableBuilder(JumpTableFillPolicy fill_policy) {
-        this.fill_policy = fill_policy;
+    int doc_id;
+    int doc_no;
+
+    public JumpTableBuilder(JumpTableConfig jt_cfg) {
+        table_config = jt_cfg;
     }
 
-    WriterAndInfo getLevelTable(int level) {
+    JumpTableWriter getLevelTable(int level) {
         if (level >= tables.size()) {
-            tables.add(new WriterAndInfo());
+            tables.add(new JumpTableWriter());
             assert (level + 1 == tables.size());
         }
 
         return tables.get(level);
     }
 
+    int getLevelStep(int level) {
+        int step = table_config.jump_table_step;
+        while(level-- > 0)
+            step *= table_config.jump_table_step;
+
+        return step;
+    }
+
     // add entry to given level
     // recursive: if needed, add entry to next (upper) level
-    void addEntryToLevel(int abs_docid, int offset, int level) throws TooLargeBlockToJump {
-        WriterAndInfo wi = getLevelTable(level);
-        JumpTableWriter jt_writer = wi.writer;
+    void addIndirectReference(int offset, int level) throws TooLargeBlockToJump {
+        JumpTableWriter writer = getLevelTable(level);
 
-        if (fill_policy.enough(wi.continuous_elems, wi.continuous_size)) {
+        if (entries_cnt != 0 && (entries_cnt % getLevelStep(level)) == 0) {
             // add indirect reference
-            addEntryToLevel(abs_docid, jt_writer.size(), level + 1);
-
-            wi.continuous_elems = 0;
-            wi.continuous_size = 0;
+            addIndirectReference(writer.size(), level + 1);
         }
 
         try {
-            wi.continuous_size += jt_writer.addEntry(abs_docid, offset);
-            wi.continuous_elems++;
+            writer.addIndirect(doc_id, offset);
         } catch (IntCompressor.TooLargeToCompressException e) {
             throw new TooLargeBlockToJump(e.getMessage());
         }
     }
 
-    public void addEntry(int abs_docid, int offset) throws TooLargeBlockToJump {
-        addEntryToLevel(abs_docid, offset, 0);
+    void addDirectEntry(int offset) throws TooLargeBlockToJump {
+        JumpTableWriter writer = getLevelTable(0);
+
+        if (entries_cnt != 0 && (entries_cnt % table_config.jump_table_step) == 0) {
+            addIndirectReference(writer.size(), 1);
+        }
+
+        try {
+            writer.addDirect(doc_id, doc_no, offset);
+            entries_cnt++;
+        } catch (IntCompressor.TooLargeToCompressException e) {
+            throw new TooLargeBlockToJump(e.getMessage());
+        }
+    }
+
+    /**
+     *
+     * @param doc_id absolute document ID
+     * @param doc_no document number in list
+     * @param offset offset to this doc_id in (packed) storage
+     * @throws TooLargeBlockToJump
+     */
+    public void addEntry(int doc_id, int doc_no, int offset) throws TooLargeBlockToJump {
+        this.doc_id = doc_id;
+        this.doc_no = doc_no;
+
+        addDirectEntry(offset);
     }
 
     public int getNumberOfLevels() {
@@ -68,12 +96,12 @@ public class JumpTableBuilder {
         try {
             size += VarByteEncoder.EncodeNumberToStream(tables.size(), out);
 
-            for (WriterAndInfo wi : tables) {
-                JumpTableWriter jt_writer = wi.writer;
-                byte[] content = jt_writer.jtbody.GetBytes();
+            for (JumpTableWriter writer : tables) {
+                byte[] content = writer.body.GetBytes();
 
                 size += VarByteEncoder.EncodeNumberToStream(content.length, out);
                 out.write(content);
+                size += content.length;
             }
         } catch (IntCompressor.TooLargeToCompressException e) {
             throw new IllegalStateException("JumpTableBuilder.write should not deal with huge jump tables!");
@@ -89,23 +117,19 @@ public class JumpTableBuilder {
     }
 
     class JumpTableWriter {
-        VarByteEncoder jtbody = new VarByteEncoder();
+        VarByteEncoder body = new VarByteEncoder();
 
-        int addEntry(int abs_docid, int offset) throws IntCompressor.TooLargeToCompressException {
-            int size_before = jtbody.GetStoreSize();
+        int size() { return body.GetStoreSize(); }
 
-            jtbody.AddNumber(abs_docid);
-            jtbody.AddNumber(offset);
-
-            return jtbody.GetStoreSize() - size_before;
+        void addIndirect(int doc_id, int offset) throws IntCompressor.TooLargeToCompressException {
+            body.AddNumber(doc_id);
+            body.AddNumber(offset);
         }
 
-        int size() { return jtbody.GetStoreSize(); }
-    }
-
-    class WriterAndInfo {
-        JumpTableWriter writer = new JumpTableWriter();
-        int continuous_elems = 0;
-        int continuous_size = 0;
+        void addDirect(int doc_id, int doc_no, int offset) throws IntCompressor.TooLargeToCompressException {
+            body.AddNumber(doc_id);
+            body.AddNumber(doc_no);
+            body.AddNumber(offset);
+        }
     }
 }

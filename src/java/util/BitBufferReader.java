@@ -28,6 +28,10 @@ public class BitBufferReader {
         cur_byte_offset = 8;
     }
 
+    public void alignByte() {
+        cur_byte_offset = 8;
+    }
+
     public final boolean hasRemaining() {
         return cur_byte_offset < 8 || buf.hasRemaining();
     }

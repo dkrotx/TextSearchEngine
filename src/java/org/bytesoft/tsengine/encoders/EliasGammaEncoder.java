@@ -48,11 +48,15 @@ public class EliasGammaEncoder implements IntCompressor {
         }
     }
 
-    public int GetStoreSize() { return (bit_index >> 3) + (((bit_index & 7) == 0) ? 0 : 1);  }
+    @Override
+    public int size() {
+        return (bit_index >> 3) + (((bit_index & 7) == 0) ? 0 : 1);
+    }
+
 
     public byte[]  GetBytes() {
         byte[] bytes = storage.toByteArray();
-        int    exact_size = GetStoreSize();
+        int    exact_size = size();
 
         if (bytes.length == exact_size)
             return bytes;
@@ -64,6 +68,12 @@ public class EliasGammaEncoder implements IntCompressor {
         System.arraycopy(bytes, 0, exact_bytes, 0, bytes.length);
 
         return exact_bytes;
+    }
+
+    @Override
+    public void flush() {
+        while ((bit_index & 7) != 0)
+            add_bit(true);
     }
 
     /**

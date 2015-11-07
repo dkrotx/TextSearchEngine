@@ -6,7 +6,9 @@ import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.encoders.IntCompressor;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
 import org.bytesoft.tsengine.idxblock.IdxBlocksIterator;
+import org.bytesoft.tsengine.idxblock.JumpTableConfig;
 import org.bytesoft.tsengine.info.IndexInfoReader;
+import org.bytesoft.tsengine.info.IndexInfoWriter;
 import util.lang.ExceptionalIterator;
 
 import java.io.Closeable;
@@ -32,6 +34,8 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  */
 public class IndexOptimizer implements Closeable {
     IndexingConfig cfg;
+    IndexInfoReader orig_info;
+
     FileChannel rindex_file;
     MappedByteBuffer rindex_mem;
     ArrayList<AbsoluteCatalogRecord> records;
@@ -42,11 +46,17 @@ public class IndexOptimizer implements Closeable {
 
     EncodersFactory encoder_factory = new EncodersFactory();
 
+    JumpTableConfig jt_config_src;
+    JumpTableConfig jt_config_dst;
+
     public IndexOptimizer(IndexingConfig cfg) throws IOException, IndexInfoReader.IndexInfoFormatError {
         this.cfg = cfg;
-        IndexInfoReader info_reader = new IndexInfoReader(cfg);
-        encoder_factory.SetCurrentDecoder(info_reader.GetEncodingMethod());
-        encoder_factory.SetCurrentEncoder(info_reader.GetEncodingMethod());
+        orig_info = new IndexInfoReader(cfg);
+        encoder_factory.SetCurrentDecoder(orig_info.GetEncodingMethod());
+        encoder_factory.SetCurrentEncoder(cfg.GetEncodingMethod());
+
+        jt_config_src = orig_info.GetJumpTableConfig();
+        jt_config_dst = JumpTableConfig.fromIndexingConfig(cfg);
     }
 
     public class IndexConvertionError extends Exception {
@@ -134,7 +144,7 @@ public class IndexOptimizer implements Closeable {
                 areas[i] = getInvertedIndexArea(records.get(i + start));
             }
 
-            IdxBlocksIterator block_reader = new IdxBlocksIterator(areas, encoder_factory);
+            IdxBlocksIterator block_reader = new IdxBlocksIterator(areas, encoder_factory, jt_config_src);
             IdxBlockEncoder single = mergeIndexBlocks(block_reader);
 
             new_rindex_writer.write(cur_word_hash, single);
@@ -145,7 +155,7 @@ public class IndexOptimizer implements Closeable {
 
     private IdxBlockEncoder mergeIndexBlocks(IdxBlocksIterator block_reader)
             throws IntCompressor.TooLargeToCompressException {
-        IdxBlockEncoder single = new IdxBlockEncoder(encoder_factory.MakeEncoder());
+        IdxBlockEncoder single = new IdxBlockEncoder(encoder_factory.MakeEncoder(), jt_config_dst);
         while (block_reader.HasNext()) {
             single.AddDocID(block_reader.ReadNext());
         }
@@ -153,12 +163,13 @@ public class IndexOptimizer implements Closeable {
         return single;
     }
 
+    private void rewriteIndexInfo() throws IOException {
+        IndexInfoWriter wr = new IndexInfoWriter(cfg);
+        wr.SetNumberOfDocs(orig_info.GetNumberOfDocs());
+        wr.Write();
+    }
+
     public void optimize() throws IOException, IndexConvertionError {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         System.out.println("read catalog records");
         readCatalog();
         System.out.println("sort catalog records");
@@ -185,5 +196,6 @@ public class IndexOptimizer implements Closeable {
 
         System.out.println("replace origin files");
         replaceOriginFiles();
+        rewriteIndexInfo();
     }
 }

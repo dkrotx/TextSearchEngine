@@ -6,9 +6,14 @@ package org.bytesoft.tsengine.encoders;
 public interface IntCompressor {
     void AddNumber(int x) throws TooLargeToCompressException;
     byte[] GetBytes();
-    int    GetStoreSize();
+
+    int  size();
+    default int GetStoreSize() {
+        return size();
+    }
 
     boolean CanEncodeZero();
+    void flush();
 
     class TooLargeToCompressException extends Exception {
         public TooLargeToCompressException(String msg) {

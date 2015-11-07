@@ -28,6 +28,8 @@ public class IndexInfoWriter {
 
             obj.put("ndocs", new Integer(ndocs));
             obj.put("encoder", EncodersFactory.GetEncoderNameByID(cfg.GetEncodingMethod()));
+            obj.put("jt_direct", cfg.GetJumpTableDirectStep());
+            obj.put("jt_indirect", cfg.GetJumpTableIndirectStep());
 
             obj.writeJSONString(wr);
         }

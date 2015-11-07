@@ -75,8 +75,18 @@ public class FibonacciEncoder implements IntCompressor {
         add_bit(true);
     }
 
-    public int GetStoreSize() { return (bit_index >> 3) + 1;  }
+    @Override
+    public void flush() {
+        while ((bit_index & 7) != 0)
+            add_bit(false);
+    }
+
     public byte[]  GetBytes() { return storage.toByteArray(); }
+
+    @Override
+    public int size() {
+        return (bit_index >> 3) + (((bit_index & 7) == 0) ? 0 : 1);
+    }
 
     /**
      * Get maximum integer value to encode.

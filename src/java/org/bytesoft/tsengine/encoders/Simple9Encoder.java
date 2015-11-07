@@ -35,6 +35,8 @@ public class Simple9Encoder implements IntCompressor {
             new variant(6, 9), new variant(7, 14), new variant(8, 28)
     };
 
+    ByteArrayOutputStream storage = new ByteArrayOutputStream();
+
 
     private static int count_bits(int num) {
         int n = 0;
@@ -87,15 +89,19 @@ public class Simple9Encoder implements IntCompressor {
 
     @Override
     public byte[] GetBytes() {
-        ByteArrayOutputStream bb = new ByteArrayOutputStream();
+        if (!numbers.isEmpty())
+            encodeBuffered();
 
+        return storage.toByteArray();
+    }
+
+    private void encodeBuffered() {
         try {
-
             int offset = 0;
             while (offset < numbers.size()) {
                 variant v = get_variant(offset);
                 int val = encode_by_variant(offset, v);
-                bb.write(Bytes.toBytes(val));
+                storage.write(Bytes.toBytes(val));
                 offset += v.amount;
             }
 
@@ -103,12 +109,23 @@ public class Simple9Encoder implements IntCompressor {
             throw new OutOfMemoryError("No memory to encode simple9 buffer");
         }
 
-        return bb.toByteArray();
+        numbers.clear();
+    }
+
+    @Override
+    public void flush() {
+        encodeBuffered();
+    }
+
+    @Override
+    public int size() {
+        return storage.size();
     }
 
     @Override
     public int GetStoreSize() {
-        return numbers.size()*INTEGER_MEMORY_SIZE + 4 /* array length */;
+        final int buffered_size = numbers.size()*INTEGER_MEMORY_SIZE + 4;
+        return storage.size() + buffered_size;
     }
 
     /**

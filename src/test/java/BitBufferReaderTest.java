@@ -56,4 +56,32 @@ public class BitBufferReaderTest {
         assertArrayEquals("Exctracted array should be the same", original, extracted);
         assertFalse(bitbuf.hasRemaining());
     }
+
+    @Test
+    public void TestAlign() {
+        byte[] original = new byte[]{ (byte)0xff, 0x00, (byte)0xff};
+
+        BitBufferReader bitbuf = new BitBufferReader(ByteBuffer.wrap(original));
+        // 0xff
+        assertTrue(bitbuf.readBit());
+        assertTrue(bitbuf.readBit());
+
+        assertTrue(bitbuf.hasRemaining());
+        bitbuf.alignByte();
+        assertTrue(bitbuf.hasRemaining());
+        // 0x00
+        assertFalse(bitbuf.readBit());
+        assertFalse(bitbuf.readBit());
+
+        assertTrue(bitbuf.hasRemaining());
+        bitbuf.alignByte();
+        assertTrue(bitbuf.hasRemaining());
+        // 0xff
+        assertTrue(bitbuf.readBit());
+        assertTrue(bitbuf.readBit());
+
+        assertTrue(bitbuf.hasRemaining());
+        bitbuf.alignByte();
+        assertFalse("butbuf should be finished by align()", bitbuf.hasRemaining());
+    }
 }

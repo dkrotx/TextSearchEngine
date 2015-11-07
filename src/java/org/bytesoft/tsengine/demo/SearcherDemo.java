@@ -15,8 +15,7 @@ import org.bytesoft.tsengine.qparse.QueryTreeBuilder;
 import org.bytesoft.tsengine.qparse.QueryTreeNode;
 import org.bytesoft.tsengine.urls.UrlsCollectionReader;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -68,7 +67,7 @@ class SearcherDemo {
                     for (int i = 0; i < records.length; i++)
                         areas[i] = getMemoryByDictRecord(records[i]);
 
-                    blocks_iter = new IdxBlocksIterator(areas, decoder_factory);
+                    blocks_iter = new IdxBlocksIterator(areas, decoder_factory, idx_info.GetJumpTableConfig());
                 }
             }
             catch(IOException e)
@@ -124,7 +123,7 @@ class SearcherDemo {
 
             while (!performer.Finished()) {
                 int id = performer.GetNextDocument();
-                if (id >= urls_reader.GetURLsAmount() || id == IdxBlocksIterator.OMEGA_ID)
+                if (id >= idx_info.GetNumberOfDocs() || id == IdxBlocksIterator.OMEGA_ID)
                     break;
 
                 printMatchedDocument(id);
@@ -151,18 +150,21 @@ class SearcherDemo {
             }
         }
 
-        if (g.getOptind() == args.length || config_file == null) {
-            System.err.println("Usage: " + SearcherDemo.class.getCanonicalName() + " -c config.file QUERY");
+        if (g.getOptind() != args.length || config_file == null) {
+            System.err.println("Usage: " + SearcherDemo.class.getCanonicalName() + " -c config.file");
             System.exit(64);
         }
 
         SearcherDemo searcher = new SearcherDemo(new IndexingConfig(config_file));
 
         try {
-            String request = args[g.getOptind()];
-            searcher.PerformRequest(request);
+            BufferedReader stream = new BufferedReader(new InputStreamReader(System.in));
+            String line;
+            while ((line = stream.readLine()) != null) {
+                searcher.PerformRequest(line.trim());
+            }
         } catch (ParseException e) {
-            System.err.println("Exception while parsing query: "+ e);
+            System.err.println("Exception while parsing query: " + e);
         }
     }
 }

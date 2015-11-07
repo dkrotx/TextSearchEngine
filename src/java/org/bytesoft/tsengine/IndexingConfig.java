@@ -23,6 +23,9 @@ public class IndexingConfig {
     private Path urls_idx_path;
     private Path info_path;
 
+    private int jt_direct_step = Integer.MAX_VALUE;
+    private int jt_indirect_step = Integer.MAX_VALUE;
+
     int lem_cache_capacity = 100000;
 
     // indexing config
@@ -73,6 +76,12 @@ public class IndexingConfig {
         encoder = EncodersFactory.GetEncoderByName(encoder_name);
         if (encoder == null)
             throw new BadConfigFormat("indexer.encoder \"" + encoder_name + "\" not known");
+
+        JSONObject jt_section = (JSONObject)idx_section.get("jump_tables");
+        if (jt_section != null) {
+            jt_direct_step = ((Long)getNecessaryField(jt_section, "direct_step")).intValue();
+            jt_indirect_step = ((Long)getNecessaryField(jt_section, "indirect_step")).intValue();
+        }
     }
 
     public IndexingConfig(String cfg_file) throws IOException, BadConfigFormat {
@@ -104,4 +113,7 @@ public class IndexingConfig {
     public int GetLemCacheCapacity() {
         return lem_cache_capacity;
     }
+
+    public int GetJumpTableDirectStep() { return jt_direct_step; }
+    public int GetJumpTableIndirectStep() { return jt_indirect_step; }
 }

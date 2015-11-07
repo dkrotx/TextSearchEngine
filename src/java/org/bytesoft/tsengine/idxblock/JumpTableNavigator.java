@@ -11,47 +11,52 @@ public class JumpTableNavigator {
 
     final private class JumpTableReader {
         ByteBuffer area;
+        boolean is_direct;
         static final int JUMP_TABLE_STARTS_WITH_BIGGER_VALUE = -1;
 
-        final private class DocumentOffsetPair {
+        final private class DocumentRecord {
             int doc_id;
+            int doc_no;
             int offset;
 
-            DocumentOffsetPair() { invalidate(); }
+            DocumentRecord() { invalidate(); }
 
             boolean valid() { return doc_id != -1; }
 
             void invalidate() {
                 doc_id = -1;
-                offset = -1;
             }
 
-            void read(ByteBuffer buf) {
-                if (buf.remaining() == 0)
-                    invalidate();
-                else {
-                    doc_id = VarByteDecoder.ExtractNumberFromBuf(buf);
-                    offset = VarByteDecoder.ExtractNumberFromBuf(buf);
-                }
-            }
-
-            void assign(DocumentOffsetPair pair) {
+            void assign(DocumentRecord pair) {
                 doc_id = pair.doc_id;
+                doc_no = pair.doc_no;
                 offset = pair.offset;
             }
         }
 
-        DocumentOffsetPair cur = new DocumentOffsetPair();
-        DocumentOffsetPair next = new DocumentOffsetPair();
+        DocumentRecord cur = new DocumentRecord();
+        DocumentRecord next = new DocumentRecord();
 
-        JumpTableReader(ByteBuffer area) {
+        JumpTableReader(ByteBuffer area, boolean is_direct) {
             this.area = area;
+            this.is_direct = is_direct;
             position(0);
+        }
+
+        void readRecord(DocumentRecord rec) {
+            if (area.remaining() == 0)
+                rec.invalidate();
+            else {
+                rec.doc_id = VarByteDecoder.ExtractNumberFromBuf(area);
+                if (is_direct)
+                    rec.doc_no = VarByteDecoder.ExtractNumberFromBuf(area);
+                rec.offset = VarByteDecoder.ExtractNumberFromBuf(area);
+            }
         }
 
         private void readNext() {
             cur.assign(next);
-            next.read(area);
+            readRecord(next);
         }
 
         int findNearestOffset(int doc_id) {
@@ -67,9 +72,12 @@ public class JumpTableNavigator {
 
         void position(int offset) {
             area.position(offset);
-            cur.read(area);
-            next.read(area);
+            readRecord(cur);
+            readRecord(next);
         }
+
+        int getCurrentJumpDocID() { return cur.doc_id; }
+        int getCurrentJumpDocNo() { return cur.doc_no; }
     }
 
     JumpTableReader[] tables;
@@ -80,15 +88,15 @@ public class JumpTableNavigator {
         ByteBuffer sub_mem = mem.slice();
         sub_mem.limit(size);
 
-        tables[level] = new JumpTableReader(sub_mem);
+        tables[level] = new JumpTableReader(sub_mem, level == 0);
         mem.position(mem.position() + size);
     }
 
     public JumpTableNavigator(ByteBuffer mem) {
-        int nlevels = VarByteDecoder.ExtractNumberFromBuf(mem);
-        tables = new JumpTableReader[nlevels];
+        int levels = VarByteDecoder.ExtractNumberFromBuf(mem);
+        tables = new JumpTableReader[levels];
 
-        for (int i = 0; i < nlevels; i++) {
+        for (int i = 0; i < levels; i++) {
             initializeLevel(mem, i);
         }
     }
@@ -102,24 +110,44 @@ public class JumpTableNavigator {
     }
 
     /**
-     * find neareast offset to given doc_id
-     * @param doc_id document ID
-     * @return nearest offset to doc_id or -1 if can't help
+     * find nearest record to given doc_id
+     * @param req: .doc_id requested document ID
+     * @return true if result can be used
      */
-    public int findNearestOffset(int doc_id) {
+    public boolean findNearestOffset(JumpRequest req) {
         if (empty())
-            return -1;
+            return false;
 
         int level = tables.length - 1;
-        int offset = tables[level].findNearestOffset(doc_id);
+        int offset = tables[level].findNearestOffset(req.doc_id);
 
         for(--level; level >= 0; level--) {
             if (offset != JumpTableReader.JUMP_TABLE_STARTS_WITH_BIGGER_VALUE) {
                 tables[level].position(offset);
             }
-            offset = tables[level].findNearestOffset(doc_id);
+            offset = tables[level].findNearestOffset(req.doc_id);
         }
 
-        return offset;
+        if (offset == JumpTableReader.JUMP_TABLE_STARTS_WITH_BIGGER_VALUE)
+            return false;
+
+        JumpTableReader jt0 = tables[0];
+
+        req.doc_id = jt0.getCurrentJumpDocID();
+        req.offset = offset;
+        req.doc_no = jt0.getCurrentJumpDocNo();
+        return true;
+    }
+
+    public static class JumpRequest {
+        public int doc_id;
+        public int doc_no;
+        public int offset;
+
+        public JumpRequest() {}
+
+        public JumpRequest(int document_id) {
+            doc_id = document_id;
+        }
     }
 }

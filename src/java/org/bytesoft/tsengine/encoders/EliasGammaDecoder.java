@@ -32,7 +32,12 @@ public class EliasGammaDecoder implements IntDecompressor {
     }
 
     @Override
-    public void Position(int new_position) {
+    public void align() {
+        bitbuf.alignByte();
+    }
+
+    @Override
+    public void position(int new_position) {
         bitbuf.position(new_position);
     }
 

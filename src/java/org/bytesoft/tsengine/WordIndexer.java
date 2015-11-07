@@ -2,6 +2,7 @@ package org.bytesoft.tsengine;
 
 import org.bytesoft.tsengine.encoders.EncodersFactory;
 import org.bytesoft.tsengine.idxblock.IdxBlockEncoder;
+import org.bytesoft.tsengine.idxblock.JumpTableConfig;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -15,11 +16,14 @@ public class WordIndexer {
     HashMap<Long, IdxBlockEncoder> words_buf = new HashMap<>();
     final int SIZE_WORD_ENTRY = 16;
     EncodersFactory encoder_factory;
+    JumpTableConfig jt_config;
 
     long acc_size = 0;
 
-    public WordIndexer(EncodersFactory encoder_factory) {
-        this.encoder_factory = encoder_factory;
+    public WordIndexer(IndexingConfig cfg) {
+        encoder_factory = new EncodersFactory();
+        encoder_factory.SetCurrentEncoder(cfg.GetEncodingMethod());
+        jt_config = JumpTableConfig.fromIndexingConfig(cfg);
     }
 
     private void addDocIDToEncoder(IdxBlockEncoder enc, int id)
@@ -38,7 +42,7 @@ public class WordIndexer {
         IdxBlockEncoder comp = words_buf.get(hash);
 
         if (comp == null) {
-            comp = new IdxBlockEncoder(encoder_factory.MakeEncoder());
+            comp = new IdxBlockEncoder(encoder_factory.MakeEncoder(), jt_config);
             words_buf.put(hash, comp);
             acc_size += SIZE_WORD_ENTRY;
         }

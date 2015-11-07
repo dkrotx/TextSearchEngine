@@ -2,7 +2,7 @@ import org.bytesoft.tsengine.encoders.IntCompressor;
 import org.bytesoft.tsengine.encoders.VarByteDecoder;
 import org.bytesoft.tsengine.encoders.VarByteEncoder;
 import org.bytesoft.tsengine.idxblock.JumpTableBuilder;
-import org.bytesoft.tsengine.idxblock.JumpTableFillPolicy;
+import org.bytesoft.tsengine.idxblock.JumpTableConfig;
 import org.bytesoft.tsengine.idxblock.JumpTableNavigator;
 import org.junit.Test;
 
@@ -24,7 +24,9 @@ public class JumpTableTest {
     JumpTableNavigator makeNavigatorFromBuilder(JumpTableBuilder builder) throws IOException {
         ByteArrayOutputStream dynmem = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(dynmem);
-        builder.write(out);
+        int nw = builder.write(out);
+
+        assertEquals("Number of bytes written to dynamic memory != reported", dynmem.size(), nw);
 
         ByteBuffer res_mem = ByteBuffer.wrap(dynmem.toByteArray());
         return new JumpTableNavigator(res_mem);
@@ -38,7 +40,8 @@ public class JumpTableTest {
         final int ndocs = 100000;
         int[] saved_offsets = new int[ndocs];
         VarByteEncoder enc = new VarByteEncoder();
-        JumpTableBuilder builder = new JumpTableBuilder(new JumpTableFillPolicy.ByNumberOfEntries(8));
+        JumpTableConfig jt_cfg = new JumpTableConfig(2, 8);
+        JumpTableBuilder builder = new JumpTableBuilder(jt_cfg);
 
         assertEquals("No levels at the beginning", 0, builder.getNumberOfLevels());
         int cur_offset = -1; // too low
@@ -47,45 +50,57 @@ public class JumpTableTest {
         // - each 2nd value goes to builder
         // - each 8th value of each jump table level makes new jump table
         for(int i = 0; i < ndocs; i++) {
-            if (i != 0 && (i % 2) == 0) {
+            if (i != 0 && (i % jt_cfg.rindex_step) == 0) {
                 cur_offset = enc.GetStoreSize();
-                builder.addEntry(i, cur_offset);
+                builder.addEntry(i, i, cur_offset);
             }
 
             saved_offsets[i] = cur_offset;
             enc.AddNumber(i);
         }
 
-        assertEquals(log_base(ndocs/2, 8), builder.getNumberOfLevels());
+        final int expected_levels = log_base(ndocs / jt_cfg.rindex_step, jt_cfg.jump_table_step);
+        assertEquals(expected_levels, builder.getNumberOfLevels());
 
         JumpTableNavigator nav = makeNavigatorFromBuilder(builder);
-        assertEquals(log_base(ndocs/2, 8), nav.getNumberOfLevels());
+        assertEquals(expected_levels, nav.getNumberOfLevels());
 
         VarByteDecoder dec = new VarByteDecoder(ByteBuffer.wrap(enc.GetBytes()));
 
-        {
-            int offset = nav.findNearestOffset(500);
-            assertEquals(saved_offsets[500], offset);
+        JumpTableNavigator.JumpRequest req = new JumpTableNavigator.JumpRequest();
 
-            dec.Position(offset);
+        {
+            req.doc_id = 500;
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals(saved_offsets[500], req.offset);
+            assertEquals(500, req.doc_no);
+            assertEquals(500, req.doc_id);
+
+            dec.position(req.offset);
             assertEquals("500 is even number, so we have exact offset to it", 500, dec.ExtractNumber());
         }
 
         {
-            int offset = nav.findNearestOffset(801);
-            assertEquals(saved_offsets[801], offset);
+            req.doc_id = 801;
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals(saved_offsets[801], req.offset);
+            assertEquals(800, req.doc_no);
+            assertEquals(800, req.doc_id);
 
-            dec.Position(offset);
+            dec.position(req.offset);
             assertEquals("801 is odd number, so we have exact offset to 800", 800, dec.ExtractNumber());
             assertEquals(801, dec.ExtractNumber());
         }
 
         // try bigger value
         {
-            int offset = nav.findNearestOffset(80001);
-            assertEquals(saved_offsets[80001], offset);
+            req.doc_id = 80001;
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals(saved_offsets[80001], req.offset);
+            assertEquals(80000, req.doc_no);
+            assertEquals(80000, req.doc_id);
 
-            dec.Position(offset);
+            dec.position(req.offset);
             assertEquals("80001 is odd number, so we have exact offset to 800", 80000, dec.ExtractNumber());
             assertEquals(80001, dec.ExtractNumber());
         }
@@ -99,7 +114,8 @@ public class JumpTableTest {
         final int ndocs = 100000;
         int[] saved_offsets = new int[ndocs];
         VarByteEncoder enc = new VarByteEncoder();
-        JumpTableBuilder builder = new JumpTableBuilder(new JumpTableFillPolicy.ByNumberOfEntries(8));
+        JumpTableConfig jt_cfg = new JumpTableConfig(128, 8);
+        JumpTableBuilder builder = new JumpTableBuilder(jt_cfg);
 
         int cur_offset = -1; // too low
 
@@ -107,32 +123,44 @@ public class JumpTableTest {
         // - each 128 th value goes to builder
         // - each 8th value of each jump table level makes new jump table
         for(int i = 0; i < ndocs; i++) {
-            if (i != 0 && (i % 128) == 0) {
+            if (i != 0 && (i % jt_cfg.rindex_step) == 0) {
                 cur_offset = enc.GetStoreSize();
-                builder.addEntry(i, cur_offset);
+                builder.addEntry(i, i, cur_offset);
             }
 
             saved_offsets[i] = cur_offset;
             enc.AddNumber(i);
         }
 
-        assertEquals(log_base(ndocs/128, 8), builder.getNumberOfLevels());
+        final int expected_levels = log_base(ndocs / jt_cfg.rindex_step, jt_cfg.jump_table_step);
+        assertEquals(expected_levels, builder.getNumberOfLevels());
 
         JumpTableNavigator nav = makeNavigatorFromBuilder(builder);
-        assertEquals(log_base(ndocs/128, 8), nav.getNumberOfLevels());
+        assertEquals(expected_levels, nav.getNumberOfLevels());
 
         {
-            assertEquals("Too small for any JT", -1, nav.findNearestOffset(0));
-            assertEquals("Too small for any JT", -1, nav.findNearestOffset(100));
-            assertEquals("Too small for any JT", -1, nav.findNearestOffset(127));
+            assertFalse("Too small for any JT", nav.findNearestOffset(new JumpTableNavigator.JumpRequest(0)));
+            assertFalse("Too small for any JT", nav.findNearestOffset(new JumpTableNavigator.JumpRequest(100)));
+            assertFalse("Too small for any JT", nav.findNearestOffset(new JumpTableNavigator.JumpRequest(127)));
 
-            assertEquals(saved_offsets[128], nav.findNearestOffset(128));
+            JumpTableNavigator.JumpRequest req = new JumpTableNavigator.JumpRequest(128);
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals(saved_offsets[128], req.offset);
         }
 
         {
-            assertEquals(saved_offsets[ndocs - 1], nav.findNearestOffset(ndocs - 1));
-            assertEquals("Beyond saved offsets", saved_offsets[ndocs - 1], nav.findNearestOffset(ndocs + 1));
-            assertEquals("Beyond saved offsets", saved_offsets[ndocs - 1], nav.findNearestOffset(ndocs + 100500));
+            JumpTableNavigator.JumpRequest req = new JumpTableNavigator.JumpRequest(ndocs - 1);
+
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals(saved_offsets[ndocs - 1], req.offset);
+
+            req.doc_id = ndocs + 1;
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals("Beyond saved offsets", saved_offsets[ndocs - 1], req.offset);
+
+            req.doc_id = ndocs + 100500;
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals("Beyond saved offsets", saved_offsets[ndocs - 1], req.offset);
         }
     }
 
@@ -144,7 +172,8 @@ public class JumpTableTest {
         final int ndocs = 10000;
         int[] saved_offsets = new int[ndocs];
         VarByteEncoder enc = new VarByteEncoder();
-        JumpTableBuilder builder = new JumpTableBuilder(new JumpTableFillPolicy.ByNumberOfEntries(8));
+        JumpTableConfig jt_cfg = new JumpTableConfig(2, 8);
+        JumpTableBuilder builder = new JumpTableBuilder(jt_cfg);
 
         int cur_offset = -1; // too low
 
@@ -152,44 +181,66 @@ public class JumpTableTest {
         // - each 2nd value goes to builder
         // - each 8th value of each jump table level makes new jump table
         for(int i = 0; i < ndocs; i++) {
-            if (i != 0 && (i % 2) == 0) {
+            if (i != 0 && (i % jt_cfg.rindex_step) == 0) {
                 cur_offset = enc.GetStoreSize();
-                builder.addEntry(i, cur_offset);
+                builder.addEntry(i, i, cur_offset);
             }
 
             saved_offsets[i] = cur_offset;
             enc.AddNumber(i);
         }
 
-        assertEquals(log_base(ndocs/2, 8), builder.getNumberOfLevels());
+        final int expected_levels = log_base(ndocs / jt_cfg.rindex_step, jt_cfg.jump_table_step);
+        assertEquals(expected_levels, builder.getNumberOfLevels());
 
         JumpTableNavigator nav = makeNavigatorFromBuilder(builder);
-        assertEquals(log_base(ndocs/2, 8), nav.getNumberOfLevels());
+        assertEquals(expected_levels, nav.getNumberOfLevels());
 
+        JumpTableNavigator.JumpRequest req = new JumpTableNavigator.JumpRequest();
         {
-            int offset = nav.findNearestOffset(500);
-            assertEquals(saved_offsets[500], offset);
+            req.doc_id = 500;
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals(saved_offsets[500], req.offset);
+            assertEquals(500, req.doc_id);
+            assertEquals(500, req.doc_no);
         }
 
         {
-            int offset = nav.findNearestOffset(100);
-            assertEquals("JumpTableNavigator shouldn't move back", -1, offset);
+            req.doc_id = 100;
+            assertFalse("JumpTableNavigator shouldn't move back", nav.findNearestOffset(req));
         }
 
         // btw, setting to same value one more time should not change anything
         {
-            int offset = nav.findNearestOffset(500);
-            assertEquals(saved_offsets[500], offset);
-
-            offset = nav.findNearestOffset(500);
-            assertEquals(saved_offsets[500], offset);
+            req.doc_id = 500;
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals(saved_offsets[500], req.offset);
+            assertEquals(500, req.doc_id);
+            assertEquals(500, req.doc_no);
         }
 
-        // Moving within same jump table entry should not change anithing too
+        // Moving within same jump table entry should not change anything too
         {
-            int offset = nav.findNearestOffset(501);
-            assertEquals(saved_offsets[501], offset);
-            assertEquals(saved_offsets[500], saved_offsets[501]);
+            req.doc_id = 501;
+            assertTrue(nav.findNearestOffset(req));
+            assertEquals(saved_offsets[500], req.offset);
+            assertEquals(500, req.doc_id);
+            assertEquals(500, req.doc_no);
         }
+    }
+
+    @Test
+    public void TestEmptyJumpTables() throws IOException {
+        JumpTableConfig jt_cfg = new JumpTableConfig(2, 8);
+        JumpTableBuilder builder = new JumpTableBuilder(jt_cfg);
+
+        ByteArrayOutputStream storage = new ByteArrayOutputStream();
+        DataOutputStream stream = new DataOutputStream(storage);
+        assertEquals(0, builder.getNumberOfLevels());
+        builder.write(stream);
+        assertEquals("There should be only 0 as level number", 1, storage.size());
+
+        JumpTableNavigator nav = new JumpTableNavigator(ByteBuffer.wrap(storage.toByteArray()));
+        assertEquals(0, nav.getNumberOfLevels());
     }
 }

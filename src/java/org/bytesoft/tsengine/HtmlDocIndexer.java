@@ -53,10 +53,7 @@ public class HtmlDocIndexer {
     public HtmlDocIndexer(IndexingConfig cfg) throws IOException {
         this.cfg = cfg;
 
-        EncodersFactory enc_factory = new EncodersFactory();
-        enc_factory.SetCurrentEncoder(cfg.GetEncodingMethod());
-
-        word_indexer = new WordIndexer(enc_factory);
+        word_indexer = new WordIndexer(cfg);
         index_writer = new IdxBlockWriter(cfg.GetRindexPath(), cfg.GetRindexCatPath());
         urls_writer = this.new UrlsWriter();
         lem_cache = new LemmatizerCache(cfg.GetLemCacheCapacity());
@@ -96,7 +93,6 @@ public class HtmlDocIndexer {
         urls_writer.Put(url);
 
         if (GetApproximateSize() >= cfg.GetMaxMemBuf()) {
-            System.out.println("Flush");
             Flush();
         }
     }

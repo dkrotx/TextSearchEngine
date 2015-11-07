@@ -25,9 +25,6 @@ public class LemmatizerCache {
     public String GetFirstForm(String word) {
         String lem = cache.get(word);
 
-        if (++attempts % 1000000 == 0) {
-            System.out.printf("LemCache statistics: hitrate=%.1f%%\n", (float)hits/attempts*100);
-        }
         if (lem != null) {
             hits++;
             return lem;

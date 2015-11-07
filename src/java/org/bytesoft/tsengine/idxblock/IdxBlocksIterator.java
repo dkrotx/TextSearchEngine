@@ -25,16 +25,27 @@ public class IdxBlocksIterator {
     static public final int OMEGA_ID = -2;
 
     /**
-     * Create block iterator from given ByteBuffer areas.
+     * Create block iterator from given ByteBuffer areas with jump tables
      * @param areas distinct index blocks to decode
+     * @param decoder_factory decoder maker
+     * @param jt_cfg configuration of Jump Tables
      */
-    public IdxBlocksIterator(ByteBuffer[] areas, EncodersFactory decoder_factory) {
+    public IdxBlocksIterator(ByteBuffer[] areas, EncodersFactory decoder_factory, JumpTableConfig jt_cfg) {
         blocks = new IdxBlockDecoder[areas.length];
 
         for (int i = 0; i < areas.length; i++) {
-            blocks[i] = new IdxBlockDecoder(areas[i], decoder_factory);
+            blocks[i] = new IdxBlockDecoder(areas[i], decoder_factory, jt_cfg);
             docs_total += blocks[i].GetDocsAmount();
         }
+    }
+
+    /**
+     * Create block iterator from given ByteBuffer areas without jump tables
+     * @param areas distinct index blocks to decode
+     * @param decoder_factory decoder maker
+     */
+    public IdxBlocksIterator(ByteBuffer[] areas, EncodersFactory decoder_factory) {
+        this(areas, decoder_factory, JumpTableConfig.makeEmptyJumpTable());
     }
 
     /**
@@ -54,15 +65,20 @@ public class IdxBlocksIterator {
             return OMEGA_ID;
 
         if (!blocks[cur_block_id].HasNext()) {
-            if (cur_block_id + 1 < blocks.length)
-                cur_block_id++;
-            else {
+            if (!select_next_block())
                 return (cur_doc_id = OMEGA_ID);
-            }
         }
 
         cur_doc_id = blocks[cur_block_id].ReadNext();
         return cur_doc_id;
+    }
+
+    private boolean select_next_block() {
+        if (cur_block_id+1 < blocks.length) {
+            cur_block_id++;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -76,15 +92,21 @@ public class IdxBlocksIterator {
      *      >  id if id itself not found, but there are documents with greater id
      */
     public int GotoDocID(int id) {
-        if (id == OMEGA_ID) {
-            cur_doc_id = OMEGA_ID;
+        if (cur_doc_id == OMEGA_ID) {
+            return OMEGA_ID;
         }
-        else {
-            while (GetCurrentDocID() < id && ReadNext() != OMEGA_ID) {
-            }
+        if (id == OMEGA_ID) {
+            return (cur_doc_id = OMEGA_ID);
         }
 
-        return GetCurrentDocID();
+        do {
+            int found_id = blocks[cur_block_id].GotoDocID(id);
+            if (found_id != -1) {
+                return (cur_doc_id = found_id);
+            }
+        } while(select_next_block());
+
+        return (cur_doc_id = OMEGA_ID);
     }
 
     /**
