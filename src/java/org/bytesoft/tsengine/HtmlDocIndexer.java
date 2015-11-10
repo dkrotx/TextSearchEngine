@@ -20,30 +20,9 @@ public class HtmlDocIndexer {
 
     private IdxBlockWriter index_writer;
 
-    private UrlsWriter urls_writer;
+    private UrlsCollectionWriter urls_writer;
     private TextTokenizer text_tokenizer = new TextTokenizer();
     private LemmatizerCache lem_cache;
-
-    private class UrlsWriter {
-        UrlsCollectionWriter writer;
-        OutputStreamWriter url_stream;
-        DataOutputStream url_idx_stream;
-
-        public UrlsWriter() throws IOException {
-            url_stream = new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(cfg.GetUrlsPath().toFile())));
-            url_idx_stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cfg.GetUrlsIdxPath().toFile())));
-            writer = new UrlsCollectionWriter(url_stream, url_idx_stream);
-        }
-
-        public void Put(String url) throws IOException {
-            writer.WriteURL(url);
-        }
-
-        public void Flush() throws IOException {
-            url_stream.flush();
-            url_idx_stream.flush();
-        }
-    }
 
 
     public class HTMLParsingError extends Exception {
@@ -55,7 +34,7 @@ public class HtmlDocIndexer {
 
         word_indexer = new WordIndexer(cfg);
         index_writer = new IdxBlockWriter(cfg.GetRindexPath(), cfg.GetRindexCatPath());
-        urls_writer = this.new UrlsWriter();
+        urls_writer = new UrlsCollectionWriter(cfg);
         lem_cache = new LemmatizerCache(cfg.GetLemCacheCapacity());
     }
 
@@ -90,7 +69,7 @@ public class HtmlDocIndexer {
 
     public void AddPlainTextDocument(String url, String text) throws IOException {
         addText(text);
-        urls_writer.Put(url);
+        urls_writer.WriteURL(url);
 
         if (GetApproximateSize() >= cfg.GetMaxMemBuf()) {
             Flush();
@@ -104,8 +83,7 @@ public class HtmlDocIndexer {
 
     public void Flush() throws IOException {
         word_indexer.flushBuffered(index_writer);
-        urls_writer.Flush();
-
+        urls_writer.flush();
         index_writer.flush();
 
         writeIndexInfo();

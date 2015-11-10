@@ -89,12 +89,6 @@ class SearcherDemo {
         dictionary = new DictionarySearcher(new RandomAccessFile(path.toFile(), "r"));
     }
 
-    private void openUrlsCollection() throws IOException {
-        Path path = cfg.GetUrlsPath();
-        Path path_idx = cfg.GetUrlsIdxPath();
-
-        urls_reader = new UrlsCollectionReader(path.toFile(), path_idx.toFile());
-    }
 
     private void printMatchedDocument(int id) throws IOException {
         System.out.printf("%4d  %s\n", id, urls_reader.ReadURL(id));
@@ -107,7 +101,7 @@ class SearcherDemo {
 
         openReverseIndex();
         openDictionary();
-        openUrlsCollection();
+        urls_reader = new UrlsCollectionReader(cfg);
     }
 
     private QueryTreeNode parseQuery(String query) throws ParseException {

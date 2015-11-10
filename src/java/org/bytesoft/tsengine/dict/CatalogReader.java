@@ -28,7 +28,7 @@ public class CatalogReader implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
         // Nothing occupied by current implementation.
         // But it's handy to use in try-with-resources block
     }

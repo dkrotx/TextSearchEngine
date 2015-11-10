@@ -1,3 +1,3 @@
 #!/bin/bash
 
-$( dirname $0 )/tsengine_run.sh org.bytesoft.tsengine.demo.HtmlIndexerDemo "$@"
+$( dirname $0 )/tsengine_run.sh -Xmx2048m org.bytesoft.tsengine.demo.HtmlIndexerDemo "$@"

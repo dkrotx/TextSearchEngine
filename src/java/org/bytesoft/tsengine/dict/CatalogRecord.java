@@ -3,7 +3,7 @@ package org.bytesoft.tsengine.dict;
 /**
  * catalog record - address of rindex' entry
  */
-public class CatalogRecord {
+public final class CatalogRecord {
     public long word_hash;
     public int size;
 

@@ -84,8 +84,19 @@ public class IndexingConfig {
         }
     }
 
+    private void makeDirectoryAbsolute(String cfg_file) {
+        if (!Paths.get(directory).isAbsolute()) {
+            Path cfg_path = Paths.get(cfg_file);
+            Path dir_path = cfg_path.resolveSibling(directory);
+
+            directory = dir_path.toAbsolutePath().toString();
+        }
+    }
+
     public IndexingConfig(String cfg_file) throws IOException, BadConfigFormat {
         readConfigFile(cfg_file);
+
+        makeDirectoryAbsolute(cfg_file);
 
         rindex_path = Paths.get(directory, "rindex.bin");
         rindex_cat_path = Paths.get(directory, "rindex.cat");

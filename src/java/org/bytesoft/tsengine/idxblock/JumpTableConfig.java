@@ -21,4 +21,8 @@ public class JumpTableConfig {
     }
 
     static private JumpTableConfig emptyJumpTable = new JumpTableConfig(Integer.MAX_VALUE, Integer.MAX_VALUE);
+
+    public boolean equals(JumpTableConfig another) {
+        return (rindex_step == another.rindex_step && jump_table_step == another.jump_table_step);
+    }
 }
