@@ -17,6 +17,7 @@ public final class WordUtils {
     }
 
     static public String GetWordFirstForm(String word) {
-        return org.bytesoft.lemmatizer.LemmatizerNative.GetFirstForm(word);
+//        return org.bytesoft.lemmatizer.LemmatizerNative.GetFirstForm(word);
+        return word;
     }
 }
