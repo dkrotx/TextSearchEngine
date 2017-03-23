@@ -50,6 +50,10 @@ protobuf {
 
     }
     generatedFilesBaseDir = "$projectDir/src/generated"
+    protoc {
+        // Download from repositories
+        artifact = 'com.google.protobuf:protoc:2.6.1'
+    }
 }
 
 sourceSets {
