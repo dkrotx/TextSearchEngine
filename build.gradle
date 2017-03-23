@@ -1,7 +1,9 @@
 version '0.1'
 
 apply plugin: 'java'
+apply plugin: 'application'
 
+mainClassName=""
 sourceCompatibility = 8
 
 repositories {
@@ -67,3 +69,37 @@ sourceSets {
 clean {
     delete "src/generated"
 }
+
+
+// Creates scripts for entry points
+// Subproject must apply application plugin to be able to call this method.
+def createScript(project, mainClass, name) {
+    project.tasks.create(name: name, type: CreateStartScripts) {
+        outputDir       = new File(project.buildDir, 'scripts')
+        mainClassName   = mainClass
+        applicationName = name
+        classpath       = project.tasks[JavaPlugin.JAR_TASK_NAME].outputs.files + project.configurations.runtime
+    }
+    project.tasks[name].dependsOn(project.jar)
+
+    project.applicationDistribution.with {
+        into("bin") {
+            from(project.tasks[name])
+            fileMode = 0755
+        }
+    }
+}
+
+// The next two lines disable the tasks for the primary main which by default
+// generates a script with a name matching the project name.
+// You can leave them enabled but if so you'll need to define mainClassName
+// And you'll be creating your application scripts two different ways which
+// could lead to confusion
+startScripts.enabled = false
+run.enabled = false
+
+// Call this for each Main class you want to expose with an app script
+createScript(project, 'org.bytesoft.tsengine.demo.HtmlIndexerDemo', 'index.sh')
+createScript(project, 'org.bytesoft.tsengine.demo.DictionaryMaker', 'make_dict.sh')
+createScript(project, 'org.bytesoft.tsengine.demo.OptimizerDemo',   'optimize.sh')
+createScript(project, 'org.bytesoft.tsengine.demo.SearcherDemo',    'search.sh')
