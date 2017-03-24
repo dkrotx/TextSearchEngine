@@ -1,8 +1,10 @@
 #!/bin/bash
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../..
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-TSENGINE_BINDIR=$SCRIPT_DIR/build/install/TextSearchEngine/bin
+pushd $SCRIPT_DIR
+
+TSENGINE_BINDIR=$SCRIPT_DIR/../../build/install/TextSearchEngine/bin
 
 function search() {
   echo $1
@@ -13,3 +15,5 @@ search "cloudera"
 search "palace"
 search "wikipedia"
 search "kindle"
+
+popd
