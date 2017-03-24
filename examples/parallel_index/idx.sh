@@ -19,10 +19,11 @@ step() {
 set -e
 set -o pipefail
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../..
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+pushd $SCRIPT_DIR
 
 IDX_TEMP_DIR=idx-temp
-TSENGINE_BINDIR=$SCRIPT_DIR/build/install/TextSearchEngine/bin
+TSENGINE_BINDIR=$SCRIPT_DIR/../../build/install/TextSearchEngine/bin
 
 rm -rf $IDX_TEMP_DIR
 mkdir $IDX_TEMP_DIR
@@ -47,3 +48,4 @@ step "make dictionary"
 $TSENGINE_BINDIR/make_dict.sh -c tsengine.conf
 
 step "Index created (tsengine.conf)"
+popd
