@@ -1,0 +1,3 @@
+*.pyc
+documents.list
+ppc/protogen/plain_document_pb2.py

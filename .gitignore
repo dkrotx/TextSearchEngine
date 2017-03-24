@@ -3,6 +3,3 @@ build/
 *.iml
 generated/
 .gradle/
-examples/parallel_index/data/
-examples/parallel_index/idx-temp/
-examples/parallel_index/tsengine.conf
