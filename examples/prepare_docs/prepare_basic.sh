@@ -7,6 +7,7 @@ pushd ${SCRIPT_DIR}
 DOCUMENT_LIST=${1:-"documents.list"}
 OUTPUT_GZ=${2:-"../parallel_index/text.parsed/documents.binary.gz"}
 
+rm -f ${DOCUMENT_LIST}
 echo "Download"
 ./download.sh "https://www.amazon.com/gp/product/B00ZV9PXP2" $DOCUMENT_LIST
 ./download.sh "https://en.wikipedia.org/wiki/United_Nations_Scientific_Committee_on_the_Effects_of_Atomic_Radiation" $DOCUMENT_LIST

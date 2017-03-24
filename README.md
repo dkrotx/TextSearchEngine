@@ -11,6 +11,7 @@ Installs all needed jars and scripts for tests
 Simple unit tests
 
 ```bash
+./examples/prepare_docs/prepare_basic.sh
 ./examples/parallel_index/idx.sh
 ./examples/parallel_index/search.sh
 ```
