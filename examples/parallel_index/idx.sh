@@ -19,14 +19,16 @@ step() {
 set -e
 set -o pipefail
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../..
+
 IDX_TEMP_DIR=idx-temp
-TSENGINE_BINDIR=/home/dkrot/IdeaProjects/TextSearchEngine
+TSENGINE_BINDIR=$SCRIPT_DIR/build/install/TextSearchEngine/bin
 
 rm -rf $IDX_TEMP_DIR
 mkdir $IDX_TEMP_DIR
 
 NFILES=$( find *.parsed/ -name '*.gz' | wc -l )
-NPROCS=4 #$( fgrep -c 'physical id' /proc/cpuinfo )
+NPROCS=1 #$( fgrep -c 'physical id' /proc/cpuinfo )
 
 NFILES_PER_PROC=$[ $NFILES / $NPROCS ]
 

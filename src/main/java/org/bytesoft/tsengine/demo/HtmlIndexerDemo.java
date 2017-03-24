@@ -79,12 +79,13 @@ class HtmlIndexerDemo {
         IOException
     {
         try(GZIPInputStream in = new GZIPInputStream( new BufferedInputStream(new FileInputStream(path)))) {
+            Base64.Decoder decoder = Base64.getDecoder();
             for(;;) {
                 PlainDocument doc = PlainDocument.parseDelimitedFrom(in);
                 if (doc == null)
                     break;
 
-                idx.AddPlainTextDocument(doc.getUrl(), doc.getContent().toStringUtf8());
+                idx.AddPlainTextDocument(doc.getUrl(), new String(decoder.decode(doc.getContent().toByteArray())));
             }
         }
     }

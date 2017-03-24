@@ -17,4 +17,6 @@ TMP_CONF=$PARTS_DIR/${OUT_DIR##*data-}.conf
 
 OUT_DIR_NAME=$( basename $OUT_DIR )
 sed -e "s/%DIRECTORY%/$OUT_DIR_NAME/" $CONFIG_TMPL >$TMP_CONF
-/home/dkrot/IdeaProjects/TextSearchEngine/index.sh -t -c $TMP_CONF "$@"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../..
+
+$SCRIPT_DIR/build/install/TextSearchEngine/bin/index.sh -t -c $TMP_CONF "$@"
